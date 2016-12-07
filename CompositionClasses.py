@@ -5,14 +5,19 @@ STAGE_DICT_STR_TO_INT = {"0": 10, "E": 11, "T": 12, "A": 13, "B": 14, "C": 15, "
 for bell in range(1,10):
     STAGE_DICT_STR_TO_INT[str(bell)] = bell
 STAGE_DICT_INT_TO_STR = {v: k for k, v in STAGE_DICT_STR_TO_INT.items()}
+for key, value in tuple(STAGE_DICT_STR_TO_INT.items()):
+    # Add lower case versions
+    STAGE_DICT_STR_TO_INT[key.lower()] = value
 
 
 class Composition:
     def __init__(self, start, stage, extents):
         self.rows = []
+        self.row_set = set()
         self.start = start
         self.stage = stage
         self.extents = extents
+        self._true = True
 
     @ property
     def current_row(self):
@@ -22,34 +27,43 @@ class Composition:
             return self.start
 
     def append(self, row):
+        if row in self.row_set:
+            self._true = None
         self.rows.append(row)
+        self.row_set.add(row)
 
     def extend(self, rows):
-        self.rows.extend(rows)
+        for row in rows:
+            self.append(row)
 
     def apply_place_notation(self, perm):
         self.append(self.current_row(perm))
 
     def is_true(self, final=False):
-        # Simple common case
-        if self.extents == 1:
-            return len(self.rows) == len(set(self.rows))
-        else:
-            test_sets = [set() for _ in range(self.extents)]
-            for row in self.rows:
-                for t_set in test_sets:
-                    if row not in t_set:
-                        t_set.add(row)
+        if self._true is None:
+            # Simple common case
+            if self.extents == 1:
+                self._true = len(self.rows) == len(set(self.rows))
+            else:
+                test_sets = [set() for _ in range(self.extents)]
+                for row in self.rows:
+                    for t_set in test_sets:
+                        if row not in t_set:
+                            t_set.add(row)
+                            break
+                    else:
+                        # row is already used too many times
+                        self._true = False
                         break
                 else:
-                    # row is already used too many times
-                    return False
-            if final:
-                # Checks if row used n or n-1 times
-                for i in range(self.extents - 1):
-                    if len(test_sets[i]) < factorial(self.stage):
-                        return False
-            return True
+                    self._true = True
+                if final:
+                    # Checks if row used n or n-1 times
+                    for i in range(self.extents - 1):
+                        if len(test_sets[i]) < factorial(self.stage):
+                            self._true = False
+                            break
+        return self._true
 
     def number_repeated_rows(self):
         # first = set()
@@ -126,6 +140,9 @@ class Row(tuple):
         return Row((self[i] for i in permutation))
 
     def __str__(self):
+        return "".join(i if isinstance(i, str) else STAGE_DICT_INT_TO_STR[i] for i in self)
+
+    def format(self, style):
         return "".join(i if isinstance(i, str) else STAGE_DICT_INT_TO_STR[i] for i in self)
 
     def matches(self, test_string):

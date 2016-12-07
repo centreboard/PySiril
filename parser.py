@@ -70,8 +70,11 @@ def process(comp, var, assignments_dict):
                         # Prevent recursion
                         comp = process(comp, "abort", assignments_dict)
                     raise StopProof(comp)
-                output = output.replace("$", str(comp.number_repeated_rows()))
+                if "$" in output:
+                    output = output.replace("$", str(comp.number_repeated_rows()))
                 print(output, end=end)
+            else:
+                raise SirilError("Unknown assignment", arg)
     return comp
 
 
@@ -87,7 +90,6 @@ def string_parsing(line, assignments_dict, stage, index):
         index += 1
         assignments_dict[key] = ("\"{}\"".format(string),)
         line = "".join((left, key, right))
-        print(line)
     return bracket_parsing(line, assignments_dict, stage, index)
 
 
@@ -110,8 +112,8 @@ def bracket_parsing(line, assignments_dict, stage, index):
                     arguments, assignments_dict, index = argument_parsing(line[i_open + 1: i_close], assignments_dict,
                                                                           stage, index)
                 else:
-                    arguments, assignments_dict, index = alternatives(line[i_open + 1: i_close], assignments_dict,
-                                                                      stage, index)
+                    arguments, assignments_dict, index = alternatives_parsing(line[i_open + 1: i_close], assignments_dict,
+                                                                              stage, index)
                 assignments_dict[key] = arguments
                 line = line[:i_open] + key + line[i_close + 1:]
                 break
@@ -178,7 +180,7 @@ def dynamic_assignment(var, arguments, assignments_dict):
     return assign
 
 
-def alternatives(line, assignments_dict, stage, index):
+def alternatives_parsing(line, assignments_dict, stage, index):
     # if "{" in line or "(" in line:
     #     raise Exception("Found bracket. Please call via bracket_parsing.")
     statements = line.split(";")
@@ -222,14 +224,17 @@ def repeat_parser(line, assignments_dict, stage, index):
     return repeat
 
 
-def main(text):
+def main(text, case_sensitive=True):
     print(text)
     assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (),
                         "conflict": ("\"# rows ending in @\nTouch not completed due to false row$$\"",),
                         "true": ("\"# rows ending in @\nTouch is true\"",),
                         "notround": ("\"# rows ending in @\nIs this OK?\"",),
-                        "false": ("\"# rows ending in @\nTouch is false in $ rows\"",)}
+                        "false": ("\"# rows ending in @\nTouch is false in $ rows\"",),
+                        "@": ("\"*\"")}
     statements = {"extents": None, "bells": None, "rounds": None, "prove": None}
+    if not case_sensitive:
+        text = text.lower()
     # Ignore comments
     text = re.sub(r"//[^\n]*", "", text)
     # Catch trailing commas for line continuation
@@ -398,11 +403,90 @@ if __name__ == '__main__':
     snap = " (12536478)",+x4x5x36x4x5x36x7x36x5x4x36x5x4x36x2
 
 prove snap, 2(sM, M), sW, sH, B, sW, B, end"""
-    main(test_input_1)
-    main(test_input_2)
-    main(test_input_3)
-    main(test_input_4)
-    main(test_dixons)
-    main(test_magic)
-    main(test_input_5)
-    main(test_false_1)
+    test_input_6 = r"""
+
+12 bells
+
+
+peal=+x3x34,b,p,p,p,p,p,mwh,h,h,w,mh,h,wh,h,h
+
+
+
+big=lead,+18
+smwh=p,p,p,p,s,b,p,p,p,p,b
+swh=p,p,p,p,p,s,p,p,p,p,b
+msh=p,p,p,p,b,p,p,p,p,p,s
+mswsh=p,p,p,p,b,s,p,p,p,p,s
+mswh=p,p,p,p,b,s,p,p,p,p,b
+mwh=p,p,p,p,b,b,p,p,p,p,b
+mh=p,p,p,p,b,p,p,p,p,p,b
+h=10p,b
+sh=10p,s
+wh=p,p,p,p,p,b,p,p,p,p,b
+sw=p,p,p,p,p,s,p,p,p,p,p
+wsh=p,p,p,p,p,b,p,p,p,p,s
+mw=p,p,p,p,b,b,p,p,p,p,p
+mwsh=p,p,p,p,b,b,p,p,p,p,s
+w=p,p,p,p,p,b,p,p,p,p,p
+msw=p,p,p,p,b,s,p,p,p,p,p
+swsh=p,p,p,p,p,s,p,p,p,p,s
+smsw=p,p,p,p,s,s,p,p,p,p,p
+smswh=p,p,p,p,s,s,p,p,p,p,b
+smswsh=p,p,p,p,s,s,p,p,p,p,s
+sm=p,p,p,p,s,p,p,p,p,p,p
+smw=p,p,p,p,s,b,p,p,p,p,p
+smwsh=p,p,p,p,s,b,p,p,p,p,s
+smsh=p,p,p,p,s,p,p,p,p,p,s
+smh=p,p,p,p,s,p,p,p,p,p,b
+m=p,p,p,p,b,p,p,p,p,p,p
+
+
+p=lead,+12,"@...Plain"
+b=lead,+14,"@......BoB"
+s=lead,+1234,"@......Single"
+x=lead,+18
+T=lead,+12345678
+
+
+
+lead=Yorkshire
+
+
+
+
+yorkstart=&-4-5-6-27-38-49-50-6-7-8-E,+3-2
+hlbys=&-3-4-5-6-27-38-49-50-6-7-8-9,+234
+hlsyb=&-3-4-5-6-27-38-49-50-6-7-8-90Et,+4
+hlbyp=&-3-4-5-6-27-38-49-50-6-7-8-9,+2
+hlsyp=&-3-4-5-6-27-38-49-50-6-7-8-90Et,+2
+hlbyb=&-3-4-5-6-27-38-49-50-6-7-8-9,+4
+hlsys=&-3-4-5-6-27-38-49-50-6-7-8-90Et,+234
+Yorkshire=&-3-4-5-6-27-38-49-50-6-7-8-E
+Pudsey=&-5-6-27-38-49-50-6-7-8-9-0-E
+cambridge=&x3x4x25x36x47x58x69x70x8x9x0xE
+ALBANIAN=&x3x4x5x6x7x8x29x30x4x5x6xE
+lINCOLNSHIRE=&x3x4x5x6x7x8x9x0x8x9x70xE
+sWINDON=&x3x4x5x6x7x8x9x0x6x7x58xE
+quedgeley=&x3x4x5x6x27x38x49x50x6x7x890xE
+eveshamabbey=&x3x4x5x6x27x38x49x50x6x7x8.56.E
+
+hlscp=&x3x4x25x36x47x58x69x70x8x9x0x90E,+2
+hlscb=&x3x4x25x36x47x58x69x70x8x9x0x90E,+4
+hlscs=&x3x4x25x36x47x58x69x70x8x9x0x90E,+234
+
+Cambend=+x3
+
+
+
+music="7890ET","default","?234567","12345","1234567","?654321","7654321","1234","4321","3456","2345","4567","34567","7654","76543","6543","5432","?1234","?4321","?3456","?2345","?4567","?34567","?76543","?7654","?6543","?5432","te0987654321","65432","?65432","23456","23465","?23456","?23465", "?658790ET","?568790ET","1324567890ET","1243567890ET","2134567890ET","1234576890ET","1234657890ET","1234568790ET","1235467890ET","1235467890ET","1627384950ET","1234567809ET","?560987ET","?650987ET","90ET","567890ET","TE098765","TE098756","657890","756890ET","765890ET","467890ET","647890ET","?756890ET","?765890ET","?876590ET", "?8756","?24680ET","?74680ET","?34680","568790"
+//everyrow="@"
+//conflict="""
+    # main(test_input_1)
+    # main(test_input_2)
+    # main(test_input_3)
+    # main(test_input_4)
+    # main(test_dixons)
+    # main(test_magic)
+    # main(test_input_5)
+    # main(test_false_1)
+    main(test_input_6, case_sensitive=0)
