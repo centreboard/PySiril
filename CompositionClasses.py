@@ -27,7 +27,7 @@ class Composition:
             return self.start
 
     def append(self, row):
-        if row in self.row_set:
+        if self._true and row in self.row_set:
             self._true = None
         self.rows.append(row)
         self.row_set.add(row)
@@ -57,6 +57,9 @@ class Composition:
                         break
                 else:
                     self._true = True
+                    self.row_set = test_sets[-1]
+                    # Set to last set, as most interested if row is in this one. The row cascades down when it
+                    # becomes dirty.
                 if final:
                     # Checks if row used n or n-1 times
                     for i in range(self.extents - 1):

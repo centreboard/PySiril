@@ -481,6 +481,110 @@ Cambend=+x3
 music="7890ET","default","?234567","12345","1234567","?654321","7654321","1234","4321","3456","2345","4567","34567","7654","76543","6543","5432","?1234","?4321","?3456","?2345","?4567","?34567","?76543","?7654","?6543","?5432","te0987654321","65432","?65432","23456","23465","?23456","?23465", "?658790ET","?568790ET","1324567890ET","1243567890ET","2134567890ET","1234576890ET","1234657890ET","1234568790ET","1235467890ET","1235467890ET","1627384950ET","1234567809ET","?560987ET","?650987ET","90ET","567890ET","TE098765","TE098756","657890","756890ET","765890ET","467890ET","647890ET","?756890ET","?765890ET","?876590ET", "?8756","?24680ET","?74680ET","?34680","568790"
 //everyrow="@"
 //conflict="""
+
+    test_41 = r"""
+    6 bells
+7 extents
+
+peal = "  @ \",2(No, Ne, Ad, Wsb, Adb, Wsb, Wkb, Wm, Lf, Bm, Wmb, Ab, Wk, Ab, Ro, Rob, St, Bc, Stb, Wk), (No, Ne, Ws, Wsb, Adb, Wsb, Wkb, Wm, Lf, Bm, Wmb, Ab, Wk, Ab, Ro, Rob, St, Bc, Stb, Wk), (Clb, Wo, Wh, Nwb, Cl, Ch, Clb, Nbb, Mo, Sa), 2(Clb, Wo, Wh, Nwb, Cl, Ch, Clb, Nbb, Ct, Sa), (Chb, Nb, Mu, Nw, Sab, 2Nbb, Mu, Clb), 2(Chb, Nb, Mu, Ak, Sab, 2Nbb, Mu, Clb), 3(Ip, Bo, Ip, Cmb, Yo, Cm, Du, Dub, Hu, Pr, Nf, Nfb, Dub, Bv, Bk, Bkb, He, Su, Sub, Yob), 2(Lo, Ke, Lob, Li, Cob, Lo, Ke, Lob, Lib, Cu, Lib), (We, Ke, Web, Co, Cob, We, Ke, Web, Lib, Cu, Lib)
+
+Cm=Cambridge,+2,"Cm \"
+Cmb=Cambridge,+4,"Cm","- @ \"
+Pr=Cambridge,+1,"Pr \"
+Ip=Ipswich,+2,"Ip \"
+Nf=Ipswich,+1,"Nf \"
+Nfb=Ipswich,+4,"Nf","- @ \"
+Bo=Bourne,+2,"Bo \"
+Hu=Bourne,+1,"Hu \"
+Bv=Beverley,+2,"Bv \"
+Bk=Beverley,+1,"Bk \"
+Bkb=Beverley,+4,"Bk","- @ \"
+Su=Surfleet,+2,"Su \"
+Sub=Surfleet,+4,"Su","- @ \"
+He=Surfleet,+1,"He \"
+Yo=York,+2,"Yo \"
+Yob=York,+4,"Yo","- @ \"
+Du=Durham,+2,"Du \"
+Dub=Durham,+4,"Du","- @ \"
+
+Ne=Netherseale,+2,"Ne \"
+Ab=Netherseale,+1,"Ab \"
+Lf=Rossendale,+2,"Lf \"
+Ro=Rossendale,+1,"Ro \"
+Rob=Rossendale,+4,"Ro","- @ \"
+Wm=Wearmouth,+2,"Wm \"
+Wmb=Wearmouth,+4,"Wm","- @ \"
+St=Wearmouth,+1,"St \"
+Stb=Wearmouth,+4,"St","- @ \"
+Ws=Westminster,+2,"Ws \"
+Wsb=Westminster,+4,"Ws","- @ \"
+Ad=Allendale,+2,"Ad \"
+Adb=Allendale,+4,"Ad","- @ \"
+Bm=Bamborough,+2,"Bm \"
+Bc=Bamborough,+1,"Bc \"
+No=Norwich,+1,"No \"
+Wk=Warkworth,+1,"Wk \"
+Wkb=Warkworth,+4,"Wk","- @ \"
+
+Lo=London,+2,"Lo \"
+Lob=London,+4,"Lo","- @ \"
+We=Wells,+2,"We \"
+Web=Wells,+4,"We","- @ \"
+Li=Lincoln,+2,"Li \"
+Lib=Lincoln,+4,"Li","- @ \"
+Co=Coldstream,+2,"Co \"
+Cob=Coldstream,+4,"Co","- @ \"
+Cu=Cunecastre,+2,"Cu \"
+Ke=Kelso,+2,"Ke \"
+
+Cl=Carlisle,+2,"Cl \"
+Clb=Carlisle,+4,"Cl","- @ \"
+Nb=Northumberland,+2,"Nb \"
+Nbb=Northumberland,+4,"Nb","- @ \"
+Wh=Northumberland,+1,"Wh \"
+Ch=Chester,+2,"Ch \"
+Chb=Chester,+4,"Ch","- @ \"
+Mu=Munden,+2,"Mu \"
+Ak=Alnwick,+2,"Ak \"
+Ct=Alnwick,+1,"Ct \"
+Nw=Newcastle,+2,"Nw \"
+Nwb=Newcastle,+4,"Nw","- @ \"
+Mo=Newcastle,+1,"Mo \"
+Sa=Sandiacre,+2,"Sa \"
+Sab=Sandiacre,+4,"Sa","- @ \"
+Wo=Sandiacre,+1,"Wo \"
+
+Cambridge=&-3-4-2-3-4-5
+Ipswich=&-3-4-2-3-4-1
+Bourne=&-3-4-2-3-34-3
+Beverley=&-3-4-2-3.4-34.5
+Surfleet=&-3-4-2-3.4-2.5
+York=&-3-4-2-3.4-4.3
+Durham=&-3-4-2-3.4-34.1
+
+Netherseale=&-34-4-2-3-4-3
+Rossendale=&-34-4-2-3.4-4.3
+Wearmouth=&-34-4-2-3.4-34.1
+Westminster=&-34-4-2-3-2-3
+Allendale=&-34-4-2-3.2-2.3
+Bamborough=&-34-4-2-3.2-4.5
+Norwich=&-34-4-2-3-34-1
+Warkworth=&-34-4-2-3.4-2.3
+
+London=&3-3.4-2-3.4-4.3
+Wells=&3-3.4-2-3.4-34.1
+Lincoln=&3-3.4-2-3-2-3
+Coldstream=&3-3.4-2-3.2-2.3
+Cunecastre=&3-3.4-2-3-4-3
+Kelso=&3-3.4-2-3.2-4.5
+
+Carlisle=&34-3.4-2-3-4-5
+Northumberland=&34-3.4-2-3-4-1
+Chester=&34-3.4-2-3.4-34.5
+Munden=&34-3.4-2-3.4-2.5
+Alnwick=&34-3.4-2-3.4-4.3
+Newcastle=&34-3.4-2-3.4-34.1
+Sandiacre=&34-3.4-2-3-34-3"""
     # main(test_input_1)
     # main(test_input_2)
     # main(test_input_3)
@@ -489,4 +593,5 @@ music="7890ET","default","?234567","12345","1234567","?654321","7654321","1234",
     # main(test_magic)
     # main(test_input_5)
     # main(test_false_1)
-    main(test_input_6, case_sensitive=0)
+    # main(test_input_6, case_sensitive=0)
+    main(test_41)
