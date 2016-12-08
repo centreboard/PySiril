@@ -180,7 +180,7 @@ def repeat_parser(line, assignments_dict, stage, index):
     return repeat
 
 
-def main(text, case_sensitive=True, assignments_dict=None, statements=None):
+def parse(text, case_sensitive=True, assignments_dict=None, statements=None, index=1):
     print(text)
     if assignments_dict is None:
         assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (),
@@ -199,7 +199,6 @@ def main(text, case_sensitive=True, assignments_dict=None, statements=None):
     text = re.sub(r",\s*\n", ", ", text)
     # Split on new lines and ; that are not within { }
     lines = re.findall(r"[^\n;]+\{.+}[^\n;]*|[^\n;{]+", text)
-    index = 1
     for line in lines:
         line = line.strip()
         if line:
@@ -232,6 +231,6 @@ def main(text, case_sensitive=True, assignments_dict=None, statements=None):
                                                                                         assignments_dict,
                                                                                         statements["bells"], index)
                     # prove(assignments_dict, statements)
-    return assignments_dict, statements
+    return assignments_dict, statements, index
 
 

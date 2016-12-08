@@ -1,9 +1,9 @@
-from SirilParser import main
+from SirilParser import parse
 from SirilProver import prove
 
 
 def run(siril, case_sensitive=True):
-    prove(*main(siril, case_sensitive))
+    prove(*parse(siril, case_sensitive)[:2])
 
 if __name__ == '__main__':
     test_input_1 = r"""
