@@ -73,6 +73,8 @@ def argument_parsing(line, assignments_dict, stage, index):
         key = "`@{}@`".format(str(index))
         index += 1
         var = var.strip()
+        if var[0].isdigit():
+            raise SirilError("Definitions cannot start with a number")
         arguments, assignments_dict, index = argument_parsing(arguments.strip(), assignments_dict, stage, index)
         # Assign it to a callable that is called by process to alter assignments_dict
         assignments_dict[key] = dynamic_assignment(var, arguments)
@@ -87,12 +89,14 @@ def argument_parsing(line, assignments_dict, stage, index):
             for j, char in enumerate(arg):
                 if not char.isdigit():
                     break
+            else:
+                raise SirilError("All digits: {}".format(arg))
             n = int(arg[:j])
             arg = re.sub(r"\s*\*\s*", "", arg[j:])
             for _ in range(n):
                 out.append(arg)
         elif re.fullmatch(r"repeat\s*`@[0-9]+@`", arg):
-            # Matches repeat and key to a bracketed expression
+            # Matches repeat and a key to a processed bracketed expression
             key = "`@{}@`".format(str(index))
             index += 1
             assignments_dict[key], index = repeat_parser(arg[6:], assignments_dict, stage, index)
@@ -100,12 +104,6 @@ def argument_parsing(line, assignments_dict, stage, index):
         elif arg == "break":
             out.append("`@break@`")
         elif arg[0] == "@":
-            # key = "`@{}@`".format(str(index))
-            # index += 1
-            # key2 = "`@{}@`".format(str(index))
-            # index += 1
-            # assignments_dict[key] = get_match(arg[1:])
-            # out.append(key)
             if len(arguments) > 1:
                 raise SirilError("Can't assign test with other statements")
             else:
@@ -117,7 +115,6 @@ def argument_parsing(line, assignments_dict, stage, index):
 
 def dynamic_assignment(var, arguments):
     def assign(comp, assignments_dict):
-        # print("Dynamic assign", var, ":", arguments)
         if callable(arguments):
             assignments_dict[var] = arguments(comp)
         else:
@@ -141,8 +138,6 @@ def get_match(slice_strings):
 
 
 def alternatives_parsing(line, assignments_dict, stage, index):
-    # if "{" in line or "(" in line:
-    #     raise Exception("Found bracket. Please call via bracket_parsing.")
     statements = line.split(";")
     test_list = []
     for statement in statements:
@@ -152,20 +147,16 @@ def alternatives_parsing(line, assignments_dict, stage, index):
         elif ":" in statement:
             test, colon, arguments = statement.partition(":")
             test = test.strip()
-            # if not re.fullmatch(r"/[^/]+/", test):
-            #     raise SirilError("Test must be of the form /.../", test)
         else:
             test, arguments = "", statement
         arguments, assignments_dict, index = argument_parsing(arguments, assignments_dict, stage, index)
         test_list.append((test, arguments))
 
     def check(comp, assignments_dict):
-        # print("Checking", test_list)
         row = comp.current_row
         for test, arguments in test_list:
             if test in assignments_dict:
                 test = assignments_dict[test]
-                #print(test)
             if not test or row.matches(test):
                 break
         else:
@@ -239,7 +230,4 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     assignments_dict["`@prove@`"], assignments_dict, index = full_parse(line[6:].strip(),
                                                                                         assignments_dict,
                                                                                         statements["bells"], index)
-                    # prove(assignments_dict, statements)
     return assignments_dict, statements, index
-
-
