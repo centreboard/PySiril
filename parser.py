@@ -38,8 +38,9 @@ def prove(assignments_dict, statements):
 def process(comp, var, assignments_dict):
     if callable(assignments_dict[var]):
         arguments, comp = assignments_dict[var](comp)
-        assignments_dict["`@temp@`"] = arguments
-        comp = process(comp, "`@temp@`", assignments_dict)
+        if arguments:
+            assignments_dict["`@temp@`"] = arguments
+            comp = process(comp, "`@temp@`", assignments_dict)
     else:
         for arg in assignments_dict[var]:
             if arg == "`@break@`":
@@ -63,7 +64,10 @@ def process(comp, var, assignments_dict):
                     output = arg[1:-1]
                 else:
                     raise SirilError("Unmatched \"", arg)
-                output = output.replace("@", str(comp.current_row)).replace("#", str(len(comp))).replace("\\n", "\n")
+                for single_use in re.findall(r"(@(\[[0-9\-]*:[0-9\-]*:?[0-9\-]*\])+)", output):
+                    output = output.replace(single_use[0], comp.current_row.format(single_use[0]))
+                output = output.replace("@", comp.current_row.format(assignments_dict["@"][0]))
+                output = output.replace("#", str(len(comp))).replace("\\n", "\n")
                 if "$$" in output:
                     print(output.replace("$$", "").replace("$", str(comp.number_repeated_rows())))
                     if var != "abort":
@@ -78,6 +82,13 @@ def process(comp, var, assignments_dict):
     return comp
 
 
+def full_parse(line, assignments_dict, stage, index):
+    line, assignments_dict, index = string_parsing(line, assignments_dict, stage, index)
+    line, assignments_dict, index = bracket_parsing(line, assignments_dict, stage, index)
+    out, assignments_dict, index = argument_parsing(line, assignments_dict, stage, index)
+    return out, assignments_dict, index
+
+
 def string_parsing(line, assignments_dict, stage, index):
     line = line.replace("'", "\"")
     while "\"" in line:
@@ -90,7 +101,7 @@ def string_parsing(line, assignments_dict, stage, index):
         index += 1
         assignments_dict[key] = ("\"{}\"".format(string),)
         line = "".join((left, key, right))
-    return bracket_parsing(line, assignments_dict, stage, index)
+    return line, assignments_dict, index
 
 
 def bracket_parsing(line, assignments_dict, stage, index):
@@ -112,14 +123,14 @@ def bracket_parsing(line, assignments_dict, stage, index):
                     arguments, assignments_dict, index = argument_parsing(line[i_open + 1: i_close], assignments_dict,
                                                                           stage, index)
                 else:
-                    arguments, assignments_dict, index = alternatives_parsing(line[i_open + 1: i_close], assignments_dict,
-                                                                              stage, index)
+                    arguments, assignments_dict, index = alternatives_parsing(line[i_open + 1: i_close],
+                                                                              assignments_dict, stage, index)
                 assignments_dict[key] = arguments
                 line = line[:i_open] + key + line[i_close + 1:]
                 break
         else:
             raise SirilError("Unmatched brackets")
-    return argument_parsing(line, assignments_dict, stage, index)
+    return line, assignments_dict, index
 
 
 def argument_parsing(line, assignments_dict, stage, index):
@@ -159,13 +170,24 @@ def argument_parsing(line, assignments_dict, stage, index):
             for _ in range(n):
                 out.append(arg)
         elif re.fullmatch(r"repeat\s*`@[0-9]+@`", arg):
-            # Matches repeat and key to a bracketted expression
+            # Matches repeat and key to a bracketed expression
             key = "`@{}@`".format(str(index))
             index += 1
             assignments_dict[key] = repeat_parser(arg[6:], assignments_dict, stage, index)
             out.append(key)
         elif arg == "break":
             out.append("`@break@`")
+        elif arg[0] == "@":
+            # key = "`@{}@`".format(str(index))
+            # index += 1
+            # key2 = "`@{}@`".format(str(index))
+            # index += 1
+            # assignments_dict[key] = get_match(arg[1:])
+            # out.append(key)
+            if len(arguments) > 1:
+                raise SirilError("Can't assign test with other statements")
+            else:
+                out = get_match(arg[1:])
         else:
             out.append(arg)
     return out, assignments_dict, index
@@ -174,10 +196,19 @@ def argument_parsing(line, assignments_dict, stage, index):
 def dynamic_assignment(var, arguments, assignments_dict):
     def assign(comp):
         # print("Dynamic assign", var, ":", arguments)
-        assignments_dict[var] = arguments
-        return [], comp
+        if callable(arguments):
+            assignments_dict[var] = arguments(comp)
+        else:
+            assignments_dict[var] = arguments
+        return (), comp
 
     return assign
+
+
+def get_match(slice_strings):
+    def current_match(comp):
+        return comp.current_row.match_string(slice_strings)
+    return current_match
 
 
 def alternatives_parsing(line, assignments_dict, stage, index):
@@ -192,17 +223,20 @@ def alternatives_parsing(line, assignments_dict, stage, index):
         elif ":" in statement:
             test, colon, arguments = statement.partition(":")
             test = test.strip()
-            if not re.fullmatch(r"/[^/]+/", test):
-                raise SirilError("Test must be of the form /.../", test)
+            # if not re.fullmatch(r"/[^/]+/", test):
+            #     raise SirilError("Test must be of the form /.../", test)
         else:
             test, arguments = "", statement
         arguments, assignments_dict, index = argument_parsing(arguments, assignments_dict, stage, index)
-        test_list.append((test[1:-1], arguments))
+        test_list.append((test, arguments))
 
     def check(comp):
         # print("Checking", test_list)
         row = comp.current_row
         for test, arguments in test_list:
+            if test in assignments_dict:
+                test = assignments_dict[test]
+                #print(test)
             if not test or row.matches(test):
                 return arguments, comp
         return [], comp
@@ -231,7 +265,7 @@ def main(text, case_sensitive=True):
                         "true": ("\"# rows ending in @\nTouch is true\"",),
                         "notround": ("\"# rows ending in @\nIs this OK?\"",),
                         "false": ("\"# rows ending in @\nTouch is false in $ rows\"",),
-                        "@": ("\"*\"")}
+                        "@": ("\"*\"",)}
     statements = {"extents": None, "bells": None, "rounds": None, "prove": None}
     if not case_sensitive:
         text = text.lower()
@@ -255,8 +289,8 @@ def main(text, case_sensitive=True):
                     raise SirilError("Definitions cannot start with a number")
                 if statements["prove"] is None:
                     statements["prove"] = var
-                arguments, assignments_dict, index = string_parsing(arguments, assignments_dict, statements["bells"],
-                                                                    index)
+                arguments, assignments_dict, index = full_parse(arguments, assignments_dict, statements["bells"],
+                                                                index)
                 assignments_dict[var] = arguments
             else:
                 # Statement
@@ -270,9 +304,9 @@ def main(text, case_sensitive=True):
                 elif line.startswith("prove "):
                     # To cope with assignment in the prove statement
                     statements["prove"] = "`@prove@`"
-                    assignments_dict["`@prove@`"], assignments_dict, index = string_parsing(line[6:].strip(),
-                                                                                            assignments_dict,
-                                                                                            statements["bells"], index)
+                    assignments_dict["`@prove@`"], assignments_dict, index = full_parse(line[6:].strip(),
+                                                                                        assignments_dict,
+                                                                                        statements["bells"], index)
                     # prove(assignments_dict, statements)
     prove(assignments_dict, statements)
 
@@ -478,7 +512,12 @@ Cambend=+x3
 
 
 
-music="7890ET","default","?234567","12345","1234567","?654321","7654321","1234","4321","3456","2345","4567","34567","7654","76543","6543","5432","?1234","?4321","?3456","?2345","?4567","?34567","?76543","?7654","?6543","?5432","te0987654321","65432","?65432","23456","23465","?23456","?23465", "?658790ET","?568790ET","1324567890ET","1243567890ET","2134567890ET","1234576890ET","1234657890ET","1234568790ET","1235467890ET","1235467890ET","1627384950ET","1234567809ET","?560987ET","?650987ET","90ET","567890ET","TE098765","TE098756","657890","756890ET","765890ET","467890ET","647890ET","?756890ET","?765890ET","?876590ET", "?8756","?24680ET","?74680ET","?34680","568790"
+music="7890ET","default","?234567","12345","1234567","?654321","7654321","1234","4321","3456","2345","4567","34567",
+"7654","76543","6543","5432","?1234","?4321","?3456","?2345","?4567","?34567","?76543","?7654","?6543","?5432",
+"te0987654321","65432","?65432","23456","23465","?23456","?23465", "?658790ET","?568790ET","1324567890ET",
+"1243567890ET","2134567890ET","1234576890ET","1234657890ET","1234568790ET","1235467890ET","1235467890ET",
+"1627384950ET","1234567809ET","?560987ET","?650987ET","90ET","567890ET","TE098765","TE098756","657890","756890ET",
+"765890ET","467890ET","647890ET","?756890ET","?765890ET","?876590ET", "?8756","?24680ET","?74680ET","?34680","568790"
 //everyrow="@"
 //conflict="""
 
@@ -486,8 +525,12 @@ music="7890ET","default","?234567","12345","1234567","?654321","7654321","1234",
     6 bells
 7 extents
 
-peal = "  @ \",2(No, Ne, Ad, Wsb, Adb, Wsb, Wkb, Wm, Lf, Bm, Wmb, Ab, Wk, Ab, Ro, Rob, St, Bc, Stb, Wk), (No, Ne, Ws, Wsb, Adb, Wsb, Wkb, Wm, Lf, Bm, Wmb, Ab, Wk, Ab, Ro, Rob, St, Bc, Stb, Wk), (Clb, Wo, Wh, Nwb, Cl, Ch, Clb, Nbb, Mo, Sa), 2(Clb, Wo, Wh, Nwb, Cl, Ch, Clb, Nbb, Ct, Sa), (Chb, Nb, Mu, Nw, Sab, 2Nbb, Mu, Clb), 2(Chb, Nb, Mu, Ak, Sab, 2Nbb, Mu, Clb), 3(Ip, Bo, Ip, Cmb, Yo, Cm, Du, Dub, Hu, Pr, Nf, Nfb, Dub, Bv, Bk, Bkb, He, Su, Sub, Yob), 2(Lo, Ke, Lob, Li, Cob, Lo, Ke, Lob, Lib, Cu, Lib), (We, Ke, Web, Co, Cob, We, Ke, Web, Lib, Cu, Lib)
-
+peal = "  @ \",2(No, Ne, Ad, Wsb, Adb, Wsb, Wkb, Wm, Lf, Bm, Wmb, Ab, Wk, Ab, Ro, Rob, St, Bc, Stb, Wk), (No, Ne, Ws,
+Wsb, Adb, Wsb, Wkb, Wm, Lf, Bm, Wmb, Ab, Wk, Ab, Ro, Rob, St, Bc, Stb, Wk), (Clb, Wo, Wh, Nwb, Cl, Ch, Clb, Nbb, Mo,
+Sa), 2(Clb, Wo, Wh, Nwb, Cl, Ch, Clb, Nbb, Ct, Sa), (Chb, Nb, Mu, Nw, Sab, 2Nbb, Mu, Clb), 2(Chb, Nb, Mu, Ak, Sab, 2Nbb,
+ Mu, Clb), 3(Ip, Bo, Ip, Cmb, Yo, Cm, Du, Dub, Hu, Pr, Nf, Nfb, Dub, Bv, Bk, Bkb, He, Su, Sub, Yob), 2(Lo, Ke, Lob, Li,
+ Cob, Lo, Ke, Lob, Lib, Cu, Lib), (We, Ke, Web, Co, Cob, We, Ke, Web, Lib, Cu, Lib),""
+@ = [1:]
 Cm=Cambridge,+2,"Cm \"
 Cmb=Cambridge,+4,"Cm","- @ \"
 Pr=Cambridge,+1,"Pr \"
@@ -585,6 +628,93 @@ Munden=&34-3.4-2-3.4-2.5
 Alnwick=&34-3.4-2-3.4-4.3
 Newcastle=&34-3.4-2-3.4-34.1
 Sandiacre=&34-3.4-2-3-34-3"""
+    test_false_2 = r"""
+    16 bells
+    c = 16x
+    x = &-D
+    everyrow = "@"
+    """
+    test_input_7 = r"""
+    8 bells
+    compEHM=p,s,4p,s,line,
+	4p,b,6p,b,6p,b,p,s,line,
+	p,s,4p,b,line,
+	b,s,4p,s,line,
+	4p,b,6p,b,6p,b,p,s,line,
+	p,s,p,b,2p,2b,line,
+	2p,b,2p,line,
+	s,3p,b,2p,s
+
+p=Lead,+12,{/*5678/:(@=[1:4]);/*678/:(@=[1:5]);/*78/:(@=[1:6]);/*8/:(@=[1:])}, {/*8/:"  @"}
+b=Lead,+14,"- @"
+s=Lead,+1234,"s @"
+Lead=&x18x18x18x18
+start = (test = @[4:])
+
+line="--------", {test: "@[4:]"}
+
+
+"""
+    test_input_8 = r"""
+    /  5075 Grandsire Caters
+/  Composed by S A Bond
+/  5075 no. 2
+
+9 bells
+
+comp=b,2p,b,2p,ln,
+BBlock,
+b,p,2b,p,line,
+BBlock,
+b,3p,s,p,ln,
+b,b,2p,b,line,
+CBlock,
+s,b,s,b,sp,line,
+CBlock,
+s,b,b,2p,line,
+p,p,s,p,p,s,ln,
+s,s,s,b,sp,line,
+p,s,p,b,p,b,ln,
+DBlock,A,
+DBlock,3b,2p,line,3b,fin
+
+A=2(3b,2p,line)
+
+BBlock=rule,
+A,s,b,p,b,p,line,A,
+s,3p,b,p,ln,A,
+b,p,s,b,p,line,
+b,3p,b,p,ln,A,
+rule
+
+CBlock=rule,
+s,p,s,p,b,line,
+b,b,4p,ln,
+A,
+b,p,s,b,p,line,
+rule
+
+DBlock=rule,
+b,p,b,b,p,line,
+A,
+b,p,b,s,p,line
+
+start="1 2 3 4 5 6  @[1:]","----------------------"
+
+p=g,+9.1,"  \"
+b=g,+3.1,"- \"
+s=g,+3.123,"s \"
+sp="  \"
+fin=g,+9,"      (134265879)"
+line="   \", print
+ln=" \", print
+print = {recall5: "@[1:4]"; recall4:"@[1:5]"; recall3:"@[1:6]"; recall2:"@[1:7]"; "@[1:]"}, recall
+start = recall
+recall = (recall5=@[4:]), (recall4=@[5:]), (recall3=@[6:]), (recall2=@[7:])
+rule="----------------------"
+
+g=+3.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1
+"""
     # main(test_input_1)
     # main(test_input_2)
     # main(test_input_3)
@@ -594,4 +724,6 @@ Sandiacre=&34-3.4-2-3-34-3"""
     # main(test_input_5)
     # main(test_false_1)
     # main(test_input_6, case_sensitive=0)
-    main(test_41)
+    # main(test_41)
+    # main(test_false_2)
+    main(test_input_8)

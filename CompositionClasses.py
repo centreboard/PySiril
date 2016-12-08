@@ -1,8 +1,9 @@
 from math import factorial
 import re
+from Exceptions import SirilError
 
 STAGE_DICT_STR_TO_INT = {"0": 10, "E": 11, "T": 12, "A": 13, "B": 14, "C": 15, "D": 16}
-for bell in range(1,10):
+for bell in range(1, 10):
     STAGE_DICT_STR_TO_INT[str(bell)] = bell
 STAGE_DICT_INT_TO_STR = {v: k for k, v in STAGE_DICT_STR_TO_INT.items()}
 for key, value in tuple(STAGE_DICT_STR_TO_INT.items()):
@@ -19,7 +20,7 @@ class Composition:
         self.extents = extents
         self._true = True
 
-    @ property
+    @property
     def current_row(self):
         if self.rows:
             return self.rows[-1]
@@ -85,7 +86,6 @@ class Composition:
                     break
         return len(test_sets[-1])
 
-
     def __len__(self):
         return len(self.rows)
 
@@ -95,6 +95,9 @@ class Matcher:
         self.cache = {}
 
     def match(self, test_string, row_string, stage):
+        if not test_string.startswith("/") or not test_string.endswith("/"):
+            raise SirilError("Test must be of the form /.../", test_string)
+        test_string = test_string.strip("/")
         if test_string in self.cache:
             tests = self.cache[test_string]
         else:
@@ -132,6 +135,7 @@ class Matcher:
 
 class Row(tuple):
     matcher = Matcher()
+    slice_re = re.compile(r"\[([0-9\-]*:[0-9\-]*:?[0-9\-]*)\]")
 
     def __init__(self, seq):
         self.stage = len(self)
@@ -146,7 +150,38 @@ class Row(tuple):
         return "".join(i if isinstance(i, str) else STAGE_DICT_INT_TO_STR[i] for i in self)
 
     def format(self, style):
-        return "".join(i if isinstance(i, str) else STAGE_DICT_INT_TO_STR[i] for i in self)
+        """Style is a string
+        * = all
+        [2:4] = slice
+        [:2][6:] = two slices added together"""
+        style = style.strip("\"")
+        if style == "*":
+            out = str(self)
+        else:
+            out = []
+            for slice_string in self.slice_re.findall(style):
+                s = self.get_slice(slice_string)
+                out.append("".join(i if isinstance(i, str) else STAGE_DICT_INT_TO_STR[i] for i in self[s]))
+            out = "".join(out)
+        return out
+
+    def match_string(self, slice_strings):
+        indices = []
+        for slice_string in self.slice_re.findall(slice_strings):
+            s = self.get_slice(slice_string)
+            indices.extend(range(s.start, s.stop, s.step))
+        return "/" + "".join((STAGE_DICT_INT_TO_STR[self[i]] if i in indices else "?" for i in range(self.stage))) + "/"
+
+    def get_slice(self, slice_string):
+        start, colon, stop = slice_string.partition(":")
+        if ":" in stop:
+            stop, colon, step = stop.partition(":")
+            step = int(step) if step else 1
+        else:
+            step = 1
+        start = int(start) if start else 0
+        stop = int(stop) if stop else self.stage
+        return slice(start, stop, step)
 
     def matches(self, test_string):
         return self.matcher.match(test_string, str(self), self.stage)
@@ -183,12 +218,13 @@ class PlaceNotationPerm(tuple):
             symmetric = False
         else:
             raise Exception("Place notation must start with & or +")
-        temp = place_notation[1:].replace("x", "-").replace("-", ".-.").replace("..",".").strip(".").split(".")
+        temp = place_notation[1:].replace("x", "-").replace("-", ".-.").replace("..", ".").strip(".").split(".")
         # using -1 for cross as it needs to be odd and not a valid bell
         place_notation_list = [[-1 if i == "-" else STAGE_DICT_STR_TO_INT[i] for i in place] for place in temp]
         if symmetric:
             place_notation_list += place_notation_list[-2::-1]
         return super().__new__(cls, (Permutation(place, stage) for place in place_notation_list))
+
 
 if __name__ == '__main__':
     p_n = "&-3-4-2-3-4-5"
