@@ -1,7 +1,8 @@
 import re
 from CompositionClasses import PlaceNotationPerm, Row
-from Exceptions import SirilError, StopRepeat
+from Exceptions import SirilError, StopRepeat, MethodImportError
 import SirilProver
+from Method_Import import get_method
 
 
 def full_parse(line, assignments_dict, stage, index):
@@ -181,7 +182,6 @@ def repeat_parser(line, assignments_dict, stage, index):
 
 
 def parse(text, case_sensitive=True, assignments_dict=None, statements=None, index=1):
-    print(text)
     if assignments_dict is None:
         assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (),
                             "conflict": ("\"# rows ending in @\nTouch not completed due to false row$$\"",),
@@ -230,4 +230,19 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     assignments_dict["`@prove@`"], assignments_dict, index = full_parse(line[6:].strip(),
                                                                                         assignments_dict,
                                                                                         statements["bells"], index)
+                elif line.startswith("method "):
+                    try:
+                        if "\"" in line:
+                            method_title, short = line.split("\"")[:2]
+                            method_title = method_title[:7].strip()
+                        else:
+                            method_title = line[7:].strip()
+                            short = method_title[:2]
+                        method_siril = get_method(method_title, short)
+                    except MethodImportError:
+                        print("Can't find method", line[7:])
+                    else:
+                        assignments_dict, statements, index = parse(method_siril, case_sensitive, assignments_dict,
+                                                                    statements, index)
+    print(text)
     return assignments_dict, statements, index

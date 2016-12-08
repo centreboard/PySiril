@@ -2,6 +2,7 @@ from SirilParser import parse
 from SirilProver import prove
 from Exceptions import SirilError
 
+
 def main():
     assignments_dict = None
     statements = None
