@@ -151,11 +151,11 @@ class Row(tuple):
 
     def format(self, style):
         """Style is a string
-        * = all
+        [:] = all
         [2:4] = slice
         [:2][6:] = two slices added together"""
         style = style.strip("\"")
-        if style == "*":
+        if style == "[:]":
             out = str(self)
         else:
             out = []
