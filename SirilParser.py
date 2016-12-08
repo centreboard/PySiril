@@ -121,7 +121,14 @@ def dynamic_assignment(var, arguments, assignments_dict):
         if callable(arguments):
             assignments_dict[var] = arguments(comp)
         else:
-            assignments_dict[var] = arguments
+            # if var in arguments:
+            new_arguments = []
+            for x in arguments:
+                if x == var:
+                    new_arguments.extend(assignments_dict[var])
+                else:
+                    new_arguments.append(x)
+            assignments_dict[var] = new_arguments
         return (), comp
 
     return assign

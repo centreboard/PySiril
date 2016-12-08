@@ -409,15 +409,73 @@ if __name__ == '__main__':
 
         g=+3.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1
     """
-    run(test_input_1)
-    run(test_input_2)
-    run(test_input_3)
-    run(test_input_4)
-    run(test_dixons)
-    run(test_magic)
-    run(test_input_5)
-    run(test_false_1)
-    run(test_input_6, case_sensitive=False)
-    run(test_41)
-    run(test_false_2)
-    run(test_input_8)
+    test_input_9 = r"""
+        9 bells
+
+        comp=b,p,s,b,p,q,line,
+        BBlock,
+        s,p,p,s,p,line,
+        p,s,s,b,p,line,
+        s,b,s,b,sp,line,
+        s,s,s,s,sp,line,
+        p,p,s,b,b,line,rule,
+        s,b,p,p,s,line,
+        b,p,p,s,b,line,
+        b,s,b,b,sp,line,
+        b,p,p,p,s,q,q,line,
+        (ToHSCourse=b,p,b,p,p,q,line),(BFinish=AFinish),
+        BBlock
+
+        ABlock=rule,3b,2p,line,2b,s,2p,line,2(3b,2p,line),2b,s,2p,line,rule
+        AFinish=rule,3b,2p,line,2b,s,2p,line,3b,2p,line,3b,fin
+        BFinish=ABlock
+        ToHSCourse=b,p,b,b,p,line
+
+        BBlock=ABlock,
+        b,s,p,b,sp,line,
+        s,p,s,p,b,line,
+        b,b,p,p,p,q,line,
+        b,b,b,p,p,line,
+        b,b,b,p,p,line,
+        b,p,s,b,p,line,
+        s,s,s,p,p,line,
+        p,b,b,b,p,line,
+        ABlock,
+        ToHSCourse,
+        BFinish
+
+        start="@[1:] 1 2 3 4 5",rule, recall
+        store = " \"
+        p=g,+9.1,(store=store, "  \")
+        q=g,+9.1
+        b=g,+3.1,(store=store, "- \")
+        s=g,+3.123,(store=store, "s \")
+        sp= (store =store, "  \")
+        fin=g,+9,"     (34265879)"
+        //line="  \", print
+        line = print, store, (store=" \"),""
+        rule="-------------------"
+        recall = (recall5=@[4:]), (recall4=@[5:]), (recall3=@[6:]), (recall2=@[7:])
+        print = {recall5: "@[1:4]      \"; recall4:"@[1:5]     \"; recall3:"@[1:6]    \"; recall2:"@[1:7]   \"; "@[1:] \"}, recall
+
+        g=+3.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1
+
+        prove comp"""
+
+
+
+
+
+    # run(test_input_1)
+    # run(test_input_2)
+    # run(test_input_3)
+    # run(test_input_4)
+    # run(test_dixons)
+    # run(test_magic)
+    # run(test_input_5)
+    # run(test_false_1)
+    # run(test_input_6, case_sensitive=False)
+    # run(test_41)
+    # run(test_false_2)
+    # run(test_input_8)
+    run(test_input_9)
