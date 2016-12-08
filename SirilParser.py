@@ -75,7 +75,7 @@ def argument_parsing(line, assignments_dict, stage, index):
         var = var.strip()
         arguments, assignments_dict, index = argument_parsing(arguments.strip(), assignments_dict, stage, index)
         # Assign it to a callable that is called by process to alter assignments_dict
-        assignments_dict[key] = dynamic_assignment(var, arguments, assignments_dict)
+        assignments_dict[key] = dynamic_assignment(var, arguments)
         line = "".join((t_line, sep, key))
     arguments = [arg.strip() for arg in line.split(",") if arg]
     out = []
@@ -95,7 +95,7 @@ def argument_parsing(line, assignments_dict, stage, index):
             # Matches repeat and key to a bracketed expression
             key = "`@{}@`".format(str(index))
             index += 1
-            assignments_dict[key] = repeat_parser(arg[6:], assignments_dict, stage, index)
+            assignments_dict[key], index = repeat_parser(arg[6:], assignments_dict, stage, index)
             out.append(key)
         elif arg == "break":
             out.append("`@break@`")
@@ -115,8 +115,8 @@ def argument_parsing(line, assignments_dict, stage, index):
     return out, assignments_dict, index
 
 
-def dynamic_assignment(var, arguments, assignments_dict):
-    def assign(comp):
+def dynamic_assignment(var, arguments):
+    def assign(comp, assignments_dict):
         # print("Dynamic assign", var, ":", arguments)
         if callable(arguments):
             assignments_dict[var] = arguments(comp)
@@ -129,7 +129,7 @@ def dynamic_assignment(var, arguments, assignments_dict):
                 else:
                     new_arguments.append(x)
             assignments_dict[var] = new_arguments
-        return (), comp
+        return (), comp, assignments_dict
 
     return assign
 
@@ -159,7 +159,7 @@ def alternatives_parsing(line, assignments_dict, stage, index):
         arguments, assignments_dict, index = argument_parsing(arguments, assignments_dict, stage, index)
         test_list.append((test, arguments))
 
-    def check(comp):
+    def check(comp, assignments_dict):
         # print("Checking", test_list)
         row = comp.current_row
         for test, arguments in test_list:
@@ -167,8 +167,10 @@ def alternatives_parsing(line, assignments_dict, stage, index):
                 test = assignments_dict[test]
                 #print(test)
             if not test or row.matches(test):
-                return arguments, comp
-        return [], comp
+                break
+        else:
+            arguments = ()
+        return arguments, comp, assignments_dict
 
     return check, assignments_dict, index
 
@@ -176,15 +178,15 @@ def alternatives_parsing(line, assignments_dict, stage, index):
 def repeat_parser(line, assignments_dict, stage, index):
     arguments, assignments_dict, index = argument_parsing(line, assignments_dict, stage, index)
 
-    def repeat(comp):
+    def repeat(comp, assignments_dict):
         try:
             assignments_dict["`@repeat@`"] = arguments
             while True:
                 comp = SirilProver.process(comp, "`@repeat@`", assignments_dict)
         except StopRepeat:
-            return [], comp
+            return [], comp, assignments_dict
 
-    return repeat
+    return repeat, index
 
 
 def parse(text, case_sensitive=True, assignments_dict=None, statements=None, index=1):

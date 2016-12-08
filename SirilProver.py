@@ -35,7 +35,7 @@ def prove(assignments_dict, statements):
 
 def process(comp, var, assignments_dict):
     if callable(assignments_dict[var]):
-        arguments, comp = assignments_dict[var](comp)
+        arguments, comp, assignments_dict = assignments_dict[var](comp, assignments_dict)
         if arguments:
             assignments_dict["`@temp@`"] = arguments
             comp = process(comp, "`@temp@`", assignments_dict)

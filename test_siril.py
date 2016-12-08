@@ -444,17 +444,17 @@ if __name__ == '__main__':
         ToHSCourse,
         BFinish
 
-        start="@[1:] 1 2 3 4 5",rule, recall
+        start=" @[1:]  1 2 3 4 5",rule, recall
         store = " \"
         p=g,+9.1,(store=store, "  \")
         q=g,+9.1
         b=g,+3.1,(store=store, "- \")
         s=g,+3.123,(store=store, "s \")
         sp= (store =store, "  \")
-        fin=g,+9,"     (34265879)"
+        fin=g,+9,"(34265879)"
         //line="  \", print
-        line = print, store, (store=" \"),""
-        rule="-------------------"
+        line = " \", print, store, (store=" \"),""
+        rule=" -------------------"
         recall = (recall5=@[4:]), (recall4=@[5:]), (recall3=@[6:]), (recall2=@[7:])
         print = {recall5: "@[1:4]      \"; recall4:"@[1:5]     \"; recall3:"@[1:6]    \"; recall2:"@[1:7]   \"; "@[1:] \"}, recall
 
