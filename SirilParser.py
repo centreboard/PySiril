@@ -2,7 +2,7 @@ import re
 from CompositionClasses import PlaceNotationPerm, Row
 from Exceptions import SirilError, StopRepeat, MethodImportError
 import SirilProver
-from Method_Import import get_method
+from Method_Import import get_method, stages
 
 
 def full_parse(line, assignments_dict, stage, index):
@@ -240,13 +240,18 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                                                                                         assignments_dict,
                                                                                         statements["bells"], index)
                 elif line.startswith("method "):
+                    if "\"" in line:
+                        method_title, short = line.split("\"")[:2]
+                        method_title = method_title[7:].strip()
+                    else:
+                        method_title = line[7:].strip()
+                        short = method_title[:2]
+                    for stage, title in stages.items():
+                        if method_title.lower().endswith(title):
+                            break
+                    else:
+                        method_title += " {}".format(str(stages[statements["bells"]]))
                     try:
-                        if "\"" in line:
-                            method_title, short = line.split("\"")[:2]
-                            method_title = method_title[7:].strip()
-                        else:
-                            method_title = line[7:].strip()
-                            short = method_title[:2]
                         method_siril = get_method(method_title, short)
                     except MethodImportError:
                         print("Can't find method", line[7:])

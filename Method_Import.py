@@ -2,6 +2,9 @@ import requests
 import xml.etree.cElementTree as ElementTree
 from Exceptions import MethodImportError
 
+stages = {4:"minimus", 5:"doubles", 6:"minor", }#"triples": 7, "major": 8, "caters": 9, "royal": 10, "cinques": 11,
+         # "maximus": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16}
+
 
 def get_method(method_title, short=""):
     params = {'title': method_title, 'fields': 'pn|stage'}

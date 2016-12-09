@@ -177,7 +177,7 @@ class Row(tuple):
         return slice(start, stop, step)
 
     def matches(self, test_string):
-        return self.matcher.match(test_string, str(self), self.stage)
+        return Row.matcher.match(test_string, str(self), self.stage)
 
 
 class Permutation(tuple):
