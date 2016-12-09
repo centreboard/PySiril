@@ -1,5 +1,5 @@
 import re
-from CompositionClasses import PlaceNotationPerm, Row
+from CompositionClasses import PlaceNotationPerm, Row, STAGE_DICT_INT_TO_STR
 from Exceptions import SirilError, StopRepeat, MethodImportError
 import SirilProver
 from Method_Import import get_method, stages
@@ -93,7 +93,7 @@ def argument_parsing(line, assignments_dict, stage, index):
             else:
                 raise SirilError("All digits: {}".format(arg))
             n = int(arg[:j])
-            arg = re.sub(r"\s*\*\s*", "", arg[j:])
+            arg = re.sub(r"\s*\*\s*", "", arg[j:]).strip()
             for _ in range(n):
                 out.append(arg)
         elif re.fullmatch(r"repeat\s*`@[0-9]+@`", arg):
@@ -184,14 +184,9 @@ def repeat_parser(line, assignments_dict, stage, index):
 
 def parse(text, case_sensitive=True, assignments_dict=None, statements=None, index=1):
     if assignments_dict is None:
-        assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (),
-                            "conflict": ("\"# rows ending in @\nTouch not completed due to false row$$\"",),
-                            "true": ("\"# rows ending in @\nTouch is true\"",),
-                            "notround": ("\"# rows ending in @\nIs this OK?\"",),
-                            "false": ("\"# rows ending in @\nTouch is false in $ rows\"",),
-                            "@": ("[:]",)}
+        assignments_dict = default_assignments_dict
     if statements is None:
-        statements = {"extents": None, "bells": None, "rounds": None, "prove": None}
+        statements = default_statements
     if not case_sensitive:
         text = text.lower()
     # Ignore comments
@@ -258,5 +253,31 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     else:
                         assignments_dict, statements, index = parse(method_siril, case_sensitive, assignments_dict,
                                                                     statements, index)
+                elif line.title() == "Default Calling Positions":
+                    tenor = STAGE_DICT_INT_TO_STR[statements["bells"]]
+                    assignments_dict, statements, index = parse(calling_postion_siril(tenor), case_sensitive,
+                                                                assignments_dict, statements, index)
+                else:
+                    print("Statement has no effect")
     print(text)
     return assignments_dict, statements, index
+
+default_assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (),
+                            "conflict": ("\"# rows ending in @\nTouch not completed due to false row$$\"",),
+                            "true": ("\"# rows ending in @\nTouch is true\"",),
+                            "notround": ("\"# rows ending in @\nIs this OK?\"",),
+                            "false": ("\"# rows ending in @\nTouch is false in $ rows\"",),
+                            "@": ("[:]",)}
+default_statements = {"extents": None, "bells": None, "rounds": None, "prove": None}
+
+
+def calling_postion_siril(tenor):
+    return r"""
+H = repeat(method, {{/*{tenor}?/: b, break; p}})
+sH = repeat(method, {{/*{tenor}?/: s, break; p}})
+W = repeat(method, {{/*{tenor}/: b, break; p}})
+sW = repeat(method, {{/*{tenor}/: s, break; p}})
+M = repeat(method, {{/*{tenor}???/: b, break; p}})
+sM = repeat(method, {{/*{tenor}???/: s, break; p}})
+B = repeat(method, {{/1{tenor}*/: b, break; p}})
+""".format(tenor=tenor)

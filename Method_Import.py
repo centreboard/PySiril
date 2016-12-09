@@ -2,8 +2,8 @@ import requests
 import xml.etree.cElementTree as ElementTree
 from Exceptions import MethodImportError
 
-stages = {4:"minimus", 5:"doubles", 6:"minor", }#"triples": 7, "major": 8, "caters": 9, "royal": 10, "cinques": 11,
-         # "maximus": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15, "sixteen": 16}
+stages = {4:"minimus", 5:"doubles", 6:"minor", 7: "triples", 8: "major", 9: "caters", 10: "royal", 11: "cinques",
+          12: "maximus", 13: "thirteen", 14: "fourteen", 15: "fifteen", 16: "sixteen"}
 
 
 def get_method(method_title, short=""):
@@ -27,11 +27,12 @@ def get_method(method_title, short=""):
             bob = str(int(stage) - 2)
             single = "{}{}{}".format(str(int(stage) - 2), str(int(stage) - 1), stage)
         else:
-            # TODO: better handling of other le, particularly gradsire and stedman
+            # TODO: better handling of other le, particularly grandsire and stedman
             bob = "4"
             single = "1234"
-        return """{short} = &{notation}, &{le}\n{short}_b = &{notation}, &{bob}
-{short}_s = &{notation}, &{single}""".format(short=short, notation=notation, bob=bob, le=le, single=single)
+        return """{short} = &{notation}, (p=&{le}), (b=&{bob}, "- @"), (s=&{single}, "s @")
+                \r {short}_pn = &{notation}\nmethod = {short}""".format(short=short,notation=notation, bob=bob, le=le,
+                                                                        single=single)
 
     elif len(method_data_2) != 0:
         notation = method_data_2[0].text
