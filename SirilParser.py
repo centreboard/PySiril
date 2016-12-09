@@ -135,6 +135,7 @@ def dynamic_assignment(var, arguments):
 def get_match(slice_strings):
     def current_match(comp):
         return comp.current_row.match_string(slice_strings)
+
     return current_match
 
 
@@ -214,6 +215,14 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     statements["prove"] = var
                 arguments, assignments_dict, index = full_parse(arguments, assignments_dict, statements["bells"],
                                                                 index)
+                if not callable(arguments) and var in arguments:
+                    new_arguments = []
+                    for x in arguments:
+                        if x == var:
+                            new_arguments.extend(assignments_dict[var])
+                        else:
+                            new_arguments.append(x)
+                    arguments = new_arguments
                 assignments_dict[var] = arguments
             else:
                 # Statement
@@ -234,7 +243,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     try:
                         if "\"" in line:
                             method_title, short = line.split("\"")[:2]
-                            method_title = method_title[:7].strip()
+                            method_title = method_title[7:].strip()
                         else:
                             method_title = line[7:].strip()
                             short = method_title[:2]

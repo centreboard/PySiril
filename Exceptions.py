@@ -11,5 +11,6 @@ class StopProof(Exception):
         self.comp = comp
         super().__init__(args)
 
+
 class MethodImportError(Exception):
     pass

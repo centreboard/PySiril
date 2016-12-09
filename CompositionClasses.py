@@ -70,14 +70,7 @@ class Composition:
         return self._true
 
     def number_repeated_rows(self):
-        # first = set()
-        # repeated = set()
-        # for row in self.rows:
-        #     if row in first:
-        #         repeated.add(row)
-        #     else:
-        #         first.add(row)
-        # return len(repeated)
+        """Returns number of rows featuring n + 1 times (i.e. are false in a n extent composition"""
         test_sets = [set() for _ in range(self.extents + 1)]
         for row in self.rows:
             for t_set in test_sets:

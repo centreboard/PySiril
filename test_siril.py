@@ -462,6 +462,11 @@ if __name__ == '__main__':
 
         prove comp"""
 
+    test_input_10 = r"""
+    10 bells
+    method Bristol Surprise Royal "B"
+    prove 9B"""
+
 
 
 
@@ -479,3 +484,4 @@ if __name__ == '__main__':
     # run(test_false_2)
     # run(test_input_8)
     run(test_input_9)
+    run(test_input_10)
