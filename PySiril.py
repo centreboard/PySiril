@@ -26,7 +26,7 @@ def main():
     index = 1
     assignments_dict_cache, statements_cache = assignments_dict.copy(), statements.copy()
     if args.prove is not None:
-        line = "prove " + " ".join(args.prove)
+        line = " ".join(("prove", args.prove))
         try:
             assignments_dict, statements, index = parse(line, args.case, assignments_dict, statements, index)
         except SirilError as e:
@@ -35,7 +35,7 @@ def main():
         else:
             assignments_dict_cache, statements_cache = assignments_dict.copy(), statements.copy()
     if args.method is not None:
-        line = "method " + " ".join(args.method)
+        line = " ".join(("method", args.method))
         try:
             assignments_dict, statements, index = parse(line, args.case, assignments_dict, statements, index)
         except SirilError as e:

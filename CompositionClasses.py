@@ -41,7 +41,7 @@ class Composition:
         self.append(self.current_row(perm))
 
     def is_true(self, final=False):
-        if self._true is None:
+        if final or self._true is None:
             # Simple common case
             if self.extents == 1:
                 self._true = len(self.rows) == len(set(self.rows))
