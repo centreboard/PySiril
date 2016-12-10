@@ -59,4 +59,4 @@ def get_method(method_title, short=""):
         notation = method_data_2[0].text
         return "{short} = +{notation}".format(short=short, notation=notation)
     else:
-        raise MethodImportError
+        raise MethodImportError(method_title)

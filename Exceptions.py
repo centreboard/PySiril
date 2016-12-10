@@ -20,8 +20,10 @@ class StopProof(Exception):
     def __init__(self, comp, *args):
         self.comp = comp
         logger.info("StopProof")
-        super().__init__(args)
+        super().__init__(*args)
 
 
 class MethodImportError(Exception):
-    pass
+    def __init__(self, title, *args):
+        logger.error("MethodImportError: {}".format(title))
+        super().__init__(title, *args)
