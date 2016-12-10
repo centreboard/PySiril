@@ -30,9 +30,12 @@ def get_method(method_title, short=""):
             # TODO: better handling of other le, particularly grandsire and stedman
             bob = "4"
             single = "1234"
-        return """{short} = &{notation}, (p=&{le}), (b=&{bob}, "- @"), (s=&{single}, "s @")
-                \r {short}_pn = &{notation}\nmethod = {short}""".format(short=short,notation=notation, bob=bob, le=le,
-                                                                        single=single)
+        return """lh = ""\nfinish = lh, finish\n{short} = lh, &{notation}, {short}_lh\n
+                \r {short}_pn = &{notation}\nmethod = {short}\n
+                \r {short}_lh = (p = lh = {short}_p), (b = lh = {short}_b), (s = lh = {short}_s), (lh={short}_p)
+                \r {short}_p = &{le} \n{short}_b = &{bob}, "- @"\n
+                \r{short}_s = &{single}, "s @\"""".format(short=short,notation=notation, bob=bob, le=le,
+                                                          single=single)
 
     elif len(method_data_2) != 0:
         notation = method_data_2[0].text

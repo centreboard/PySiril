@@ -47,7 +47,7 @@ def process(comp, var, assignments_dict):
                 comp = process(comp, arg, assignments_dict)
             elif isinstance(arg, PlaceNotationPerm):
                 for perm in arg:
-                    comp.apply_place_notation(perm)
+                    comp.apply_perm(perm)
                     comp = process(comp, "everyrow", assignments_dict)
                     if not comp.is_true():
                         comp = process(comp, "conflict", assignments_dict)
@@ -75,11 +75,18 @@ def print_string(comp, arg, assignments_dict, var):
     output = output.replace("@", comp.current_row.format(assignments_dict["@"][0]))
     output = output.replace("#", str(len(comp))).replace("\\n", "\n")
     if "$$" in output:
-        print(output.replace("$$", "").replace("$", str(comp.number_repeated_rows())))
+        if "`@output@`" in assignments_dict:
+            print(output.replace("$$", "").replace("$", str(comp.number_repeated_rows())), end=end,
+                  file=assignments_dict["`@output@`"])
+        else:
+            print(output.replace("$$", "").replace("$", str(comp.number_repeated_rows())), end=end)
         if var != "abort":
             # Prevent recursion
             comp = process(comp, "abort", assignments_dict)
         raise StopProof(comp)
     if "$" in output:
         output = output.replace("$", str(comp.number_repeated_rows()))
-    print(output, end=end)
+    if "`@output@`" in assignments_dict:
+        print(output, end=end, file=assignments_dict["`@output@`"])
+    else:
+        print(output, end=end)

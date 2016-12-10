@@ -37,7 +37,7 @@ class Composition:
         for row in rows:
             self.append(row)
 
-    def apply_place_notation(self, perm):
+    def apply_perm(self, perm):
         self.append(self.current_row(perm))
 
     def is_true(self, final=False):

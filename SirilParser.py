@@ -184,9 +184,9 @@ def repeat_parser(line, assignments_dict, stage, index):
 
 def parse(text, case_sensitive=True, assignments_dict=None, statements=None, index=1):
     if assignments_dict is None:
-        assignments_dict = default_assignments_dict
+        assignments_dict = default_assignments_dict.copy()
     if statements is None:
-        statements = default_statements
+        statements = default_statements.copy()
     if not case_sensitive:
         text = text.lower()
     # Ignore comments
