@@ -54,8 +54,8 @@ class TestProver(TestCase):
                 x = Permutation((-1,), stage)
                 abort_row = rounds(x)
                 self.assertRaises(StopProof, print_string, comp, "\"@$$@ \\\"", assignments_dict, "")
-                self.assertEqual(self.file.read(), "{row}{row} Aborting.\nRow={abort_row}\n".format(row=rounds,
-                                                                                                    abort_row=abort_row))
+                self.assertEqual(self.file.read(), "{row}{row} Aborting.\nRow={abortrow}\n".format(row=rounds,
+                                                                                                   abortrow=abort_row))
                 # Test for quote closure
                 self.assertRaises(SirilError, print_string, comp, "\"Not closed", self.default_assignments_dict, "")
                 self.file.read()
@@ -98,7 +98,7 @@ class TestProver(TestCase):
         assignments_dict = self.new_assignments_dict
         assignments_dict["true"] = (assignments_dict["true"][0], "\"{}\"".format(random.random()))
         comp = prove(*parse(siril, assignments_dict=assignments_dict)[:2])
-        #print(str(self.file))
+        # print(str(self.file))
         ending = assignments_dict["true"][0].replace("#", str(len(comp)))
         ending = ending.replace("@", str(comp.current_row)).strip("\"") + "\n"
         ending += assignments_dict["true"][1].strip("\"") + "\n"

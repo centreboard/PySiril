@@ -3,7 +3,6 @@ from CompositionClasses import PlaceNotationPerm, Row, Composition
 from Exceptions import SirilError, StopRepeat, StopProof
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 

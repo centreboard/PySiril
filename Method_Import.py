@@ -53,7 +53,7 @@ def get_method(method_title, short=""):
                     {short}_lh = (p = lh = {short}_p), (b = lh = {short}_b), (s = lh = {short}_s), (lh={short}_p)
                     {short}_p = &{le} \n{short}_b = &{bob}, "- @"
                     {short}_s = &{single}, "s @\"""".format(short=short, notation=notation, bob=bob, le=le,
-                                                          single=single))
+                                                            single=single))
 
     elif len(method_data_2) != 0:
         notation = method_data_2[0].text

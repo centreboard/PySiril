@@ -5,7 +5,6 @@ import SirilProver
 from Method_Import import get_method, stages
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -267,6 +266,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     logger.info("Statement has no effect")
     logger.info(text)
     return assignments_dict, statements, index
+
 
 default_assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (), "post_proof": (),
                             "conflict": ("\"# rows ending in @\nTouch not completed due to false row$$\"",),

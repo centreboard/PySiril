@@ -468,10 +468,6 @@ if __name__ == '__main__':
     method Bristol Surprise Royal "B"
     prove 9B"""
 
-
-
-
-
     run(test_input_1)
     run(test_input_2)
     run(test_input_3)
