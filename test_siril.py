@@ -451,13 +451,14 @@ if __name__ == '__main__':
         b=g,+3.1,(store=store, "- \")
         s=g,+3.123,(store=store, "s \")
         sp= (store =store, "  \")
-        fin=g,+9,"(34265879)"
-        //line="  \", print
+        fin=g,+9
+
         line = " \", print, store, (store=" \"),""
         rule=" -------------------"
         recall = (recall5=@[4:]), (recall4=@[5:]), (recall3=@[6:]), (recall2=@[7:])
         print = {recall5: "@[1:4]      \"; recall4:"@[1:5]     \"; recall3:"@[1:6]    \"; recall2:"@[1:7]   \"; "@[1:] \"}, recall
-
+        print_post = "(\", {recall5: "@[1:4]\"; recall4:"@[1:5]\"; recall3:"@[1:6]\"; recall2:"@[1:7]\"; "@[1:]\"}, ")"
+        post_proof = +1, repeat({recall2: print_post, break; p})
         g=+3.1.9.1.9.1.9.1.9.1.9.1.9.1.9.1
 
         prove comp"""

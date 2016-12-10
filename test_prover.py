@@ -1,6 +1,6 @@
 import mock
 from unittest import TestCase
-from CompositionClasses import Composition, Row, Permutation, PlaceNotationPerm
+from CompositionClasses import Composition, Row, Permutation, PlaceNotationPerm, STAGE_DICT_INT_TO_STR
 from SirilProver import prove, print_string
 from SirilParser import parse, default_assignments_dict
 from Exceptions import StopProof, SirilError
@@ -103,6 +103,31 @@ class TestProver(TestCase):
     def test_prove(self):
         for siril in true_siril:
             comp = prove(*parse(siril, assignments_dict=self.new_assignments_dict)[:2])
+            print(str(self.file))
+            ending = self.default_assignments_dict["true"][0].replace("#", str(len(comp)))
+            ending = ending.replace("@", str(comp.current_row)).strip("\"") + "\n"
+            self.assertEqual(ending, self.file.read()[-len(ending):])
+
+    def test_stedman(self):
+        for stage in range(7, 16, 2):
+            plain_siril = """
+            {n} bells
+            method Stedman
+            post_proof = +3.1, "  @"
+            prove St, {x}p, +{pn}.1.3.1""".format(n=stage, x=2 * stage - 1, pn=STAGE_DICT_INT_TO_STR[stage])
+            comp = prove(*parse(plain_siril, assignments_dict=self.new_assignments_dict)[:2])
+            print(str(self.file))
+            ending = self.default_assignments_dict["true"][0].replace("#", str(len(comp)))
+            ending = ending.replace("@", str(comp.current_row)).strip("\"") + "\n"
+            self.assertEqual(ending, self.file.read()[-len(ending):])
+
+            bob_siril = """
+                        {n} bells
+                        method Stedman
+                        post_proof = +3.1, "- @"
+                        prove St, {x}b, +{pn}.1.3.1""".format(n=stage, x=2 * (stage - 2) - 1,
+                                                              pn=STAGE_DICT_INT_TO_STR[stage - 2])
+            comp = prove(*parse(bob_siril, assignments_dict=self.new_assignments_dict)[:2])
             print(str(self.file))
             ending = self.default_assignments_dict["true"][0].replace("#", str(len(comp)))
             ending = ending.replace("@", str(comp.current_row)).strip("\"") + "\n"

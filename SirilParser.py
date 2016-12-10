@@ -262,7 +262,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
     print(text)
     return assignments_dict, statements, index
 
-default_assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (),
+default_assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (), "post_proof": (),
                             "conflict": ("\"# rows ending in @\nTouch not completed due to false row$$\"",),
                             "true": ("\"# rows ending in @\nTouch is true\"",),
                             "notround": ("\"# rows ending in @\nIs this OK?\"",),

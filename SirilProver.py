@@ -23,6 +23,9 @@ def prove(assignments_dict, statements):
         comp = process(comp, "finish", assignments_dict)
         if comp.is_true(True):
             if comp.current_row == rounds:
+                # Use a copy for post proof
+                post_comp = Composition(comp.current_row, comp.stage, comp.extents)
+                post_comp = process(post_comp, "post_proof", assignments_dict)
                 comp = process(comp, "true", assignments_dict)
             else:
                 comp = process(comp, "notround", assignments_dict)
