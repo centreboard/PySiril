@@ -3,6 +3,10 @@ from CompositionClasses import PlaceNotationPerm, Row, STAGE_DICT_INT_TO_STR
 from Exceptions import SirilError, StopRepeat, MethodImportError
 import SirilProver
 from Method_Import import get_method, stages
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def full_parse(line, assignments_dict, stage, index):
@@ -17,7 +21,7 @@ def string_parsing(line, assignments_dict, index):
     while "\"" in line:
         left, _, right = line.partition("\"")
         if "\"" not in right:
-            raise SirilError("String not closed", line)
+            raise SirilError("String not closed: {}".format(line))
         else:
             string, _, right = right.partition("\"")
         key = "`@{}@`".format(str(index))
@@ -116,6 +120,7 @@ def argument_parsing(line, assignments_dict, stage, index):
 
 def dynamic_assignment(var, arguments):
     def assign(comp, assignments_dict):
+        logger.info("Dynamic Assignment {var}: {arg}".format(var=var, arg=arguments))
         if callable(arguments):
             assignments_dict[var] = arguments(comp)
         else:
@@ -224,7 +229,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                 match = re.match(r"([0-9]+)\s+(extents|bells)", line.lower())
                 if match:
                     if statements[match.group(2)] is not None:
-                        raise SirilError("Trying to reassign", match.group(2))
+                        raise SirilError("Trying to reassign {}".format(match.group(2)))
                     statements[match.group(2)] = int(match.group(1))
                 elif line.startswith("rounds "):
                     statements["rounds"] = Row(line[7:].strip())

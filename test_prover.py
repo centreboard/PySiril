@@ -6,12 +6,6 @@ from SirilParser import parse, default_assignments_dict
 from Exceptions import StopProof, SirilError
 import random
 
-true_siril = ["""
-{B} bells
-method Plain Bob
-Default Calling Positions
-prove 2(W, H)""".format(B=B) for B in range(6, 17, 2)]
-
 
 class DummyFile:
     def __init__(self):
@@ -100,35 +94,38 @@ class TestProver(TestCase):
     def test_process(self):
         pass
 
-    def test_prove(self):
-        for siril in true_siril:
-            comp = prove(*parse(siril, assignments_dict=self.new_assignments_dict)[:2])
-            print(str(self.file))
-            ending = self.default_assignments_dict["true"][0].replace("#", str(len(comp)))
-            ending = ending.replace("@", str(comp.current_row)).strip("\"") + "\n"
-            self.assertEqual(ending, self.file.read()[-len(ending):])
+    def prove_true(self, siril):
+        assignments_dict = self.new_assignments_dict
+        assignments_dict["true"] = (assignments_dict["true"][0], "\"{}\"".format(random.random()))
+        comp = prove(*parse(siril, assignments_dict=assignments_dict)[:2])
+        #print(str(self.file))
+        ending = assignments_dict["true"][0].replace("#", str(len(comp)))
+        ending = ending.replace("@", str(comp.current_row)).strip("\"") + "\n"
+        ending += assignments_dict["true"][1].strip("\"") + "\n"
+        self.assertEqual(ending, self.file.read()[-len(ending):])
+
+    def test_plain_bob(self):
+        for stage in range(6, 17, 2):
+            siril = """
+            {B} bells
+            method Plain Bob
+            Default Calling Positions
+            prove 2(W, H)""".format(B=stage)
+            self.prove_true(siril)
 
     def test_stedman(self):
         for stage in range(7, 16, 2):
             plain_siril = """
-            {n} bells
+            {B} bells
             method Stedman
             post_proof = +3.1, "  @"
-            prove St, {x}p, +{pn}.1.3.1""".format(n=stage, x=2 * stage - 1, pn=STAGE_DICT_INT_TO_STR[stage])
-            comp = prove(*parse(plain_siril, assignments_dict=self.new_assignments_dict)[:2])
-            print(str(self.file))
-            ending = self.default_assignments_dict["true"][0].replace("#", str(len(comp)))
-            ending = ending.replace("@", str(comp.current_row)).strip("\"") + "\n"
-            self.assertEqual(ending, self.file.read()[-len(ending):])
+            prove St, {x}p, +{pn}.1.3.1""".format(B=stage, x=2 * stage - 1, pn=STAGE_DICT_INT_TO_STR[stage])
+            self.prove_true(plain_siril)
 
             bob_siril = """
-                        {n} bells
+                        {B} bells
                         method Stedman
                         post_proof = +3.1, "- @"
-                        prove St, {x}b, +{pn}.1.3.1""".format(n=stage, x=2 * (stage - 2) - 1,
+                        prove St, {x}b, +{pn}.1.3.1""".format(B=stage, x=2 * (stage - 2) - 1,
                                                               pn=STAGE_DICT_INT_TO_STR[stage - 2])
-            comp = prove(*parse(bob_siril, assignments_dict=self.new_assignments_dict)[:2])
-            print(str(self.file))
-            ending = self.default_assignments_dict["true"][0].replace("#", str(len(comp)))
-            ending = ending.replace("@", str(comp.current_row)).strip("\"") + "\n"
-            self.assertEqual(ending, self.file.read()[-len(ending):])
+            self.prove_true(bob_siril)

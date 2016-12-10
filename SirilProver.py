@@ -1,11 +1,16 @@
 import re
 from CompositionClasses import PlaceNotationPerm, Row, Composition
 from Exceptions import SirilError, StopRepeat, StopProof
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 def prove(assignments_dict, statements):
-    print(assignments_dict)
-    print(statements)
+    logger.info("New proof")
+    logger.info(assignments_dict)
+    logger.info(statements)
     try:
         stage = int(statements["bells"])
     except ValueError:
@@ -59,7 +64,7 @@ def process(comp, var, assignments_dict):
             elif arg.startswith("\""):
                 print_string(comp, arg, assignments_dict, var)
             else:
-                raise SirilError("Unknown assignment", arg)
+                raise SirilError("Unknown assignment: {}".format(arg))
     return comp
 
 
@@ -72,17 +77,18 @@ def print_string(comp, arg, assignments_dict, var):
         end = "\n"
         output = arg[1:-1]
     else:
-        raise SirilError("Unmatched \"", arg)
+        raise SirilError("String not closed: {}".format(arg))
     for single_use in re.findall(r"(@(\[[0-9\-]*:[0-9\-]*:?[0-9\-]*\])+)", output):
         output = output.replace(single_use[0], comp.current_row.format(single_use[0]))
     output = output.replace("@", comp.current_row.format(assignments_dict["@"][0]))
     output = output.replace("#", str(len(comp))).replace("\\n", "\n")
     if "$$" in output:
+        logger.info("$$ called by {}".format(var))
+        output = output.replace("$$", "").replace("$", str(comp.number_repeated_rows()))
         if "`@output@`" in assignments_dict:
-            print(output.replace("$$", "").replace("$", str(comp.number_repeated_rows())), end=end,
-                  file=assignments_dict["`@output@`"])
+            print(output, end=end, file=assignments_dict["`@output@`"])
         else:
-            print(output.replace("$$", "").replace("$", str(comp.number_repeated_rows())), end=end)
+            print(output, end=end)
         if var != "abort":
             # Prevent recursion
             comp = process(comp, "abort", assignments_dict)
