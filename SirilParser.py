@@ -8,8 +8,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def full_parse(line, assignments_dict, stage, index):
+def full_parse(line, assignments_dict, stage, index, case_sensitive=True):
     line, assignments_dict, index = string_parsing(line, assignments_dict, index)
+    if not case_sensitive:
+        line = line.lower()
     line, assignments_dict, index = bracket_parsing(line, assignments_dict, stage, index)
     out, assignments_dict, index = argument_parsing(line, assignments_dict, stage, index)
     return out, assignments_dict, index
@@ -191,8 +193,6 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
         assignments_dict = default_assignments_dict.copy()
     if statements is None:
         statements = default_statements.copy()
-    if not case_sensitive:
-        text = text.lower()
     # Ignore comments
     text = re.sub(r"//[^\n]*", "", text)
     # Catch trailing commas for line continuation
@@ -210,10 +210,12 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                 var = var.strip()
                 if var[0].isdigit():
                     raise SirilError("Definitions cannot start with a number")
+                if not case_sensitive:
+                    var = var.lower()
                 if statements["prove"] is None:
                     statements["prove"] = var
                 arguments, assignments_dict, index = full_parse(arguments, assignments_dict, statements["bells"],
-                                                                index)
+                                                                index, case_sensitive)
                 if not callable(arguments) and var in arguments:
                     new_arguments = []
                     for x in arguments:
@@ -230,15 +232,15 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     if statements[match.group(2)] is not None:
                         raise SirilError("Trying to reassign {}".format(match.group(2)))
                     statements[match.group(2)] = int(match.group(1))
-                elif line.startswith("rounds "):
+                elif line.lower().startswith("rounds "):
                     statements["rounds"] = Row(line[7:].strip())
-                elif line.startswith("prove "):
+                elif line.lower().startswith("prove "):
                     # To cope with assignment in the prove statement
                     statements["prove"] = "`@prove@`"
                     assignments_dict["`@prove@`"], assignments_dict, index = full_parse(line[6:].strip(),
                                                                                         assignments_dict,
                                                                                         statements["bells"], index)
-                elif line.startswith("method "):
+                elif line.lower().startswith("method "):
                     if "\"" in line:
                         method_title, short = line.split("\"")[:2]
                         method_title = method_title[7:].strip()
