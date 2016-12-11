@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class SirilError(Exception):
     def __init__(self, msg, *args):
-        logger.error(msg)
+        logger.error("SirilError: {}".format(msg))
         super().__init__(msg, *args)
     pass
 
@@ -23,7 +23,6 @@ class StopProof(Exception):
         super().__init__(*args)
 
 
-class MethodImportError(Exception):
+class MethodImportError(SirilError):
     def __init__(self, title, *args):
-        logger.error("MethodImportError: {}".format(title))
-        super().__init__(title, *args)
+        super().__init__("MethodImportError: {}".format(title), *args)

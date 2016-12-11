@@ -1,6 +1,6 @@
 import re
 from CompositionClasses import PlaceNotationPerm, Row, STAGE_DICT_INT_TO_STR
-from Exceptions import SirilError, StopRepeat, MethodImportError
+from Exceptions import SirilError, StopRepeat
 import SirilProver
 from Method_Import import get_method, stages
 import logging
@@ -234,6 +234,11 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     statements[match.group(2)] = int(match.group(1))
                 elif line.lower().startswith("rounds "):
                     statements["rounds"] = Row(line[7:].strip())
+                    if statements["bells"] is not None:
+                        if statements["rounds"].stage != statements["bells"]:
+                            raise SirilError("Rounds not same length as number of bells")
+                    else:
+                        statements["bells"] = statements["rounds"].stage
                 elif line.lower().startswith("prove "):
                     # To cope with assignment in the prove statement
                     statements["prove"] = "`@prove@`"
@@ -252,19 +257,18 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                             break
                     else:
                         method_title += " {}".format(str(stages[statements["bells"]]))
-                    try:
-                        method_siril = get_method(method_title, short)
-                    except MethodImportError:
-                        print("Can't find method", line[7:])
-                    else:
-                        assignments_dict, statements, index = parse(method_siril, case_sensitive, assignments_dict,
-                                                                    statements, index)
+                    method_siril = get_method(method_title, short)
+                    assignments_dict, statements, index = parse(method_siril, case_sensitive, assignments_dict,
+                                                                statements, index)
                 elif line.title() == "Default Calling Positions":
                     tenor = STAGE_DICT_INT_TO_STR[statements["bells"]]
                     assignments_dict, statements, index = parse(calling_postion_siril(tenor), case_sensitive,
                                                                 assignments_dict, statements, index)
                 else:
-                    print("Statement has no effect")
+                    if "`@output@`" in assignments_dict:
+                        print("Statement has no effect", file=assignments_dict["`@output@`"])
+                    else:
+                        print("Statement has no effect")
                     logger.info("Statement has no effect")
     logger.info(text)
     return assignments_dict, statements, index

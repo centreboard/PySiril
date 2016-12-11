@@ -133,7 +133,7 @@ class Row(tuple):
     def __init__(self, seq):
         self.stage = len(self)
         if len(set(self)) != self.stage:
-            raise Exception("Repeated element", self)
+            raise SirilError("Repeated element in row {}".format(str(self)))
         super().__init__()
 
     def __call__(self, permutation):

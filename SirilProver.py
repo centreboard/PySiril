@@ -39,9 +39,8 @@ def prove(assignments_dict, statements):
     except StopProof as e:
         comp = e.comp
     except RuntimeError as e:
-        print("RuntimeError:", e)
-        logger.error("RuntimeError: {}".format(e))
         logger.error(traceback.format_exc())
+        raise SirilError("RuntimeError: {}".format(e))
     return comp
 
 
@@ -73,7 +72,7 @@ def process(comp, var, assignments_dict):
 
 
 def print_string(comp, arg, assignments_dict, var):
-    # Print string
+    """Prints given argument string to assignments_dict["`@output@`"] or sys.stdout after formatting special char"""
     if arg.endswith("\\\""):
         end = ""
         output = arg[1:-2]
