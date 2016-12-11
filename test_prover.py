@@ -94,15 +94,17 @@ class TestProver(TestCase):
     def test_process(self):
         pass
 
-    def prove_true(self, siril):
+    def check_final(self, siril, final="true", assertion=True):
         assignments_dict = self.new_assignments_dict
-        assignments_dict["true"] = (assignments_dict["true"][0], "\"{}\"".format(random.random()))
         comp = prove(*parse(siril, assignments_dict=assignments_dict)[:2])
         # print(str(self.file))
-        ending = assignments_dict["true"][0].replace("#", str(len(comp)))
-        ending = ending.replace("@", str(comp.current_row)).strip("\"") + "\n"
-        ending += assignments_dict["true"][1].strip("\"") + "\n"
-        self.assertEqual(ending, self.file.read()[-len(ending):])
+        ending = assignments_dict[final][0].replace("#", str(len(comp))).replace("$$", "")
+        ending = ending.replace("@", str(comp.current_row)).strip("\"").replace("$", str(comp.number_repeated_rows()))
+        ending += "\n"
+        if assertion:
+            self.assertEqual(ending, self.file.read()[-len(ending):])
+        else:
+            self.assertNotEqual(ending, self.file.read()[-len(ending):])
 
     def test_plain_bob(self):
         for stage in range(6, 17, 2):
@@ -111,7 +113,7 @@ class TestProver(TestCase):
             method Plain Bob
             Default Calling Positions
             prove 2(W, H)""".format(B=stage)
-            self.prove_true(siril)
+            self.check_final(siril)
 
     def test_stedman(self):
         for stage in range(7, 16, 2):
@@ -120,7 +122,7 @@ class TestProver(TestCase):
             method Stedman
             post_proof = +3.1, "  @"
             prove St, {x}p, +{pn}.1.3.1""".format(B=stage, x=2 * stage - 1, pn=STAGE_DICT_INT_TO_STR[stage])
-            self.prove_true(plain_siril)
+            self.check_final(plain_siril)
 
             bob_siril = """
                         {B} bells
@@ -128,4 +130,31 @@ class TestProver(TestCase):
                         post_proof = +3.1, "- @"
                         prove St, {x}b, +{pn}.1.3.1""".format(B=stage, x=2 * (stage - 2) - 1,
                                                               pn=STAGE_DICT_INT_TO_STR[stage - 2])
-            self.prove_true(bob_siril)
+            self.check_final(bob_siril)
+
+    def test_conflict(self):
+        for stage in range(4, 17):
+            for extents in range(1, 10):
+                siril = """
+                {B} bells
+                {n} extents
+                x = +-
+                prove {x}x""".format(B=stage, n=extents, x=2 * extents + 1)
+                self.check_final(siril, "conflict")
+
+                siril = """
+                        {B} bells
+                        {n} extents
+                        x = +-1
+                        prove {x}x""".format(B=stage, n=extents, x=2 * extents * stage)
+                self.check_final(siril, "conflict")
+
+                siril = """
+                        {B} bells
+                        {n} extents
+                        x = +-1
+                        conflict= "No dollars"
+                        prove {x}x""".format(B=stage, n=extents, x=2 * extents * stage)
+                self.check_final(siril, "conflict", False)
+                self.check_final(siril, "true", False)
+                self.check_final(siril, "false")

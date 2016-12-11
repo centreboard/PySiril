@@ -1,3 +1,4 @@
+import traceback
 import re
 from CompositionClasses import PlaceNotationPerm, Row, Composition
 from Exceptions import SirilError, StopRepeat, StopProof
@@ -37,6 +38,10 @@ def prove(assignments_dict, statements):
             comp = process(comp, "false", assignments_dict)
     except StopProof as e:
         comp = e.comp
+    except RuntimeError as e:
+        print("RuntimeError:", e)
+        logger.error("RuntimeError: {}".format(e))
+        logger.error(traceback.format_exc())
     return comp
 
 
