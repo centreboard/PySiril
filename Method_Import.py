@@ -25,7 +25,7 @@ def get_method(method_title, short=""):
                 {short}_s = +{n2}{n1}{n}, six, "s @"
                 """.format(short=short, n=STAGE_DICT_INT_TO_STR[stage], n1=STAGE_DICT_INT_TO_STR[stage - 1],
                            n2=STAGE_DICT_INT_TO_STR[stage - 2]))
-    params = {'title': method_title, 'fields': 'pn|stage'}
+    params = {'title': method_title, 'fields': 'pn'}
     source = requests.get('http://methods.ringing.org/cgi-bin/simple.pl', params=params)
     root = ElementTree.fromstring(source.text)
     method_xml = root
@@ -35,25 +35,13 @@ def get_method(method_title, short=""):
     if not short:
         short = method_title[:2]
     if len(method_data_1) != 0:
-        stage = method_xml.find(xmlns + 'method/' + xmlns + 'stage').text
         notation = method_data_1[0].text
         le = method_data_1[1].text
-        # print(methodin)
-        # print('Notation: &', notation, sep='')
-        # print('Lead End:', le)
-        if le[-1] == stage:
-            bob = str(int(stage) - 2)
-            single = "{}{}{}".format(str(int(stage) - 2), str(int(stage) - 1), stage)
-        else:
-            # TODO: better handling of other le, particularly grandsire and stedman
-            bob = "4"
-            single = "1234"
         return dedent("""lh = ""\nfinish = lh, finish\n{short} = lh, &{notation}, {short}_lh\n
                     {short}_pn = &{notation}\nmethod = {short}
                     {short}_lh = (p = lh = {short}_p), (b = lh = {short}_b), (s = lh = {short}_s), (lh={short}_p)
-                    {short}_p = &{le} \n{short}_b = &{bob}, "- @"
-                    {short}_s = &{single}, "s @\"""".format(short=short, notation=notation, bob=bob, le=le,
-                                                            single=single))
+                    {short}_p = &{le} \n{short}_b = bob, "- @"
+                    {short}_s = single, "s @\"""".format(short=short, notation=notation, le=le))
 
     elif len(method_data_2) != 0:
         notation = method_data_2[0].text

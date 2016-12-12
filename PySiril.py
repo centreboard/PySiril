@@ -1,16 +1,20 @@
+#!/usr/bin/env python3
 import sys
 import argparse
 from SirilParser import parse, default_assignments_dict, default_statements
 from SirilProver import prove
 from Exceptions import SirilError
+from DummyFile import DummyFile
 
 
-def try_parse(siril, case_sensitive, assignments_dict, statements, index, line_n):
+def try_parse(siril, case_sensitive, assignments_dict, statements, index, line_n, raise_error=False):
     assignments_dict_cache, statements_cache = assignments_dict.copy(), statements.copy()
     try:
         assignments_dict, statements, index = parse(siril, case_sensitive, assignments_dict, statements, index)
     except SirilError as e:
         print("Line:", line_n, "SirilError:", e, file=assignments_dict["`@output@`"])
+        if raise_error:
+            raise e
         assignments_dict, statements = assignments_dict_cache, statements_cache
         success = False
     else:
@@ -18,20 +22,21 @@ def try_parse(siril, case_sensitive, assignments_dict, statements, index, line_n
     return assignments_dict, statements, index, success
 
 
-def try_prove(assignments_dict, statements, line_n):
+def try_prove(assignments_dict, statements, line_n, raise_error=False):
     # Cache and prove means that dynamic assignments aren't stored after the proof
     assignments_dict_cache, statements_cache = assignments_dict.copy(), statements.copy()
     try:
-        prove(assignments_dict, statements)
+        comp, truth = prove(assignments_dict, statements)
     except SirilError as e:
         print("Line:", line_n, "SirilError:", e, file=assignments_dict["`@output@`"])
+        if raise_error:
+            raise e
         assignments_dict, statements = assignments_dict_cache, statements_cache
-        success = False
+        truth = None
     else:
         assignments_dict, statements = assignments_dict_cache, statements_cache
         statements["prove"] = None
-        success = True
-    return assignments_dict, statements, success
+    return assignments_dict, statements, truth
 
 
 def main():
@@ -44,6 +49,8 @@ def main():
     parser.add_argument("-r", "--rounds", nargs='?', type=str, help="The starting 'rounds'")
     parser.add_argument("-P", "--prove", nargs='?', type=str, help="Proves given symbol")
     parser.add_argument("-M", "--method", nargs='?', type=str, help="Generates siril for a given method")
+    parser.add_argument("-b", "--bob", nargs='?', type=str, default="+4", const="", help="Place notation for bob for method")
+    parser.add_argument("-s", "--single", nargs='?', type=str, default="+234", const="", help="Place notation for bob for method")
     parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     args = parser.parse_args()
@@ -53,37 +60,49 @@ def main():
     statements = default_statements
 
     import_calling_position = args.callingPositions
+    raise_error = args.infile != sys.stdin
     assignments_dict["`@output@`"] = args.outfile
     statements["bells"] = args.bells
     statements["extents"] = args.extents
+
+    line = " ".join(("bob =", args.bob))
+    assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0,
+                                                             raise_error)
+    line = " ".join(("single =", args.single))
+    assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0,
+                                                             raise_error)
     if args.rounds is not None:
         line = " ".join(("rounds", args.rounds))
-        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index)
-        if not success and args.infile != sys.stdin:
-            return
-    if args.prove is not None:
-        line = " ".join(("prove", args.prove))
-        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0)
-        if not success and args.infile != sys.stdin:
-            return
+        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
+                                                                 0, raise_error)
     if args.method is not None:
         line = " ".join(("method", args.method))
-        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0)
-        if not success and args.infile != sys.stdin:
-            return
-    if import_calling_position and statements["bells"]:
-        line = "Default Calling Positions"
-        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0)
-        if success:
-            import_calling_position = False
-        elif args.infile != sys.stdin:
-            return
-    if statements["bells"] and statements["prove"] == "`@prove@`":
-        assignments_dict, statements, success = try_prove(assignments_dict, statements, 0)
-        if not success and args.infile != sys.stdin:
-            return
-
+        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
+                                                                 0, raise_error)
+    if statements["bells"]:
+        if import_calling_position:
+            line = "Default Calling Positions"
+            assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements,
+                                                                     index,
+                                                                     0, raise_error)
+            if success:
+                import_calling_position = False
+        if args.prove is not None:
+            line = " ".join(("prove", args.prove))
+            t_assignment, t_statement = assignments_dict.copy(), statements.copy()
+            file = DummyFile()
+            t_assignment["`@output@`"] = file
+            t_assignment, t_statement, _, success_parse = try_parse(line, args.case, t_assignment, t_statement,
+                                                                    index, 0, raise_error=False)
+            if success_parse:
+                t_assignment, t_statement, success = try_prove(t_assignment, t_statement, 0, raise_error=False)
+                if success:
+                    file.dump(assignments_dict["`@output@`"])
+        elif statements["prove"] == "`@prove@`":
+            assignments_dict, statements, success = try_prove(assignments_dict, statements, 0, raise_error)
+    # Initialise variable which may be assigned by loop
     stored_line = ""
+    truth, file = 0, DummyFile()
     for n, line in enumerate(args.infile, start=1):
         if stored_line:
             line = stored_line + line
@@ -93,21 +112,28 @@ def main():
         else:
             stored_line = ""
 
-        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, n)
-        if not success and args.infile != sys.stdin:
-            return
-        if import_calling_position and statements["bells"]:
-            line = "Default Calling Positions"
-            assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements,
-                                                                     index, n)
-            if success:
-                import_calling_position = False
-            elif args.infile != sys.stdin:
-                return
-        if statements["bells"] and statements["prove"] == "`@prove@`":
-            assignments_dict, statements, success = try_prove(assignments_dict, statements, n)
-            if not success and args.infile != sys.stdin:
-                return
+        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
+                                                                 n, raise_error)
+        if statements["bells"]:
+            if import_calling_position:
+                line = "Default Calling Positions"
+                assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements,
+                                                                         index, 0, raise_error)
+                if success:
+                    import_calling_position = False
+            if args.prove is not None:
+                line = " ".join(("prove", args.prove))
+                t_assignment, t_statement = assignments_dict.copy(), statements.copy()
+                file = DummyFile()
+                t_assignment["`@output@`"] = file
+                t_assignment, t_statement, _, success = try_parse(line, args.case, t_assignment, t_statement, index, 0,
+                                                                  raise_error=False)
+                if success:
+                    try_prove(t_assignment, t_statement, 0, raise_error=False)
+            if statements["prove"] == "`@prove@`" and (args.infile == sys.stdin or args.prove is None):
+                assignments_dict, statements, success = try_prove(assignments_dict, statements, n, raise_error)
+    # Actually print last attempt at proving args.prove
+    file.dump(assignments_dict["`@output@`"])
 
 
 if __name__ == '__main__':

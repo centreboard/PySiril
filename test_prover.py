@@ -5,22 +5,7 @@ from SirilProver import prove, print_string
 from SirilParser import parse, default_assignments_dict
 from Exceptions import StopProof, SirilError
 import random
-
-
-class DummyFile:
-    def __init__(self):
-        self.buffer = []
-
-    def write(self, string):
-        self.buffer.append(string)
-
-    def __str__(self):
-        return "".join(self.buffer)
-
-    def read(self):
-        out = "".join(self.buffer)
-        self.buffer = []
-        return out
+from DummyFile import DummyFile
 
 
 def random_permutation(iterable, r=None):
@@ -96,7 +81,7 @@ class TestProver(TestCase):
 
     def check_final(self, siril, final="true", assertion=True):
         assignments_dict = self.new_assignments_dict
-        comp = prove(*parse(siril, assignments_dict=assignments_dict)[:2])
+        comp, truth = prove(*parse(siril, assignments_dict=assignments_dict)[:2])
         # print(str(self.file))
         ending = assignments_dict[final][0].replace("#", str(len(comp))).replace("$$", "")
         ending = ending.replace("@", str(comp.current_row)).strip("\"").replace("$", str(comp.number_repeated_rows()))
