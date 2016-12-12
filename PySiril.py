@@ -67,14 +67,17 @@ def main():
         assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
                                                                  0, False, raise_error)
     if not statements["bells"] and (args.bob or args.single or args.method):
-        parser.error("Please set number of bells with -B=BELLS (or implicitly with -r=ROUNDS) before using -b, -s or -M")
+        parser.error(
+            "Please set number of bells with -B=BELLS (or implicitly with -r=ROUNDS) before using -b, -s or -M")
     if args.bob is not None:
         line = " ".join(("bob =", args.bob))
-        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0,
+        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
+                                                                 0,
                                                                  False, raise_error)
     if args.single is not None:
         line = " ".join(("single =", args.single))
-        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0,
+        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
+                                                                 0,
                                                                  False, raise_error)
     if args.method is not None:
         line = " ".join(("method", args.method))
