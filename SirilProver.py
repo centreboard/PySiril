@@ -41,7 +41,7 @@ def prove(assignments_dict, statements):
             truth = 0
     except StopProof as e:
         comp = e.comp
-        truth = 0
+        truth = None
     except RuntimeError as e:
         logger.error(traceback.format_exc())
         raise SirilError("RuntimeError: {}".format(e))

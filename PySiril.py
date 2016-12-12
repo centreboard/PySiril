@@ -49,8 +49,8 @@ def main():
     parser.add_argument("-r", "--rounds", nargs='?', type=str, help="The starting 'rounds'")
     parser.add_argument("-P", "--prove", nargs='?', type=str, help="Proves given symbol")
     parser.add_argument("-M", "--method", nargs='?', type=str, help="Generates siril for a given method")
-    parser.add_argument("-b", "--bob", nargs='?', type=str, default="+4", const="", help="Place notation for bob for method")
-    parser.add_argument("-s", "--single", nargs='?', type=str, default="+234", const="", help="Place notation for bob for method")
+    parser.add_argument("-b", "--bob", nargs='?', type=str, const="+4", help="Place notation for bob for method")
+    parser.add_argument("-s", "--single", nargs='?', type=str, const="+234", help="Place notation for bob for method")
     parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     args = parser.parse_args()
@@ -64,17 +64,20 @@ def main():
     assignments_dict["`@output@`"] = args.outfile
     statements["bells"] = args.bells
     statements["extents"] = args.extents
-
-    line = " ".join(("bob =", args.bob))
-    assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0,
-                                                             raise_error)
-    line = " ".join(("single =", args.single))
-    assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0,
-                                                             raise_error)
     if args.rounds is not None:
         line = " ".join(("rounds", args.rounds))
         assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
                                                                  0, raise_error)
+    if not statements["bells"] and (args.bob or args.single or args.method):
+        parser.error("Please set number of bells with -B=BELLS (or implicitly with -r=ROUNDS) before using -b, -s or -M")
+    if args.bob is not None:
+        line = " ".join(("bob =", args.bob))
+        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0,
+                                                                 raise_error)
+    if args.single is not None:
+        line = " ".join(("single =", args.single))
+        assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index, 0,
+                                                                 raise_error)
     if args.method is not None:
         line = " ".join(("method", args.method))
         assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
