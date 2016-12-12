@@ -1,10 +1,9 @@
-import mock
+import random
 from unittest import TestCase
 from CompositionClasses import Composition, Row, Permutation, PlaceNotationPerm, STAGE_DICT_INT_TO_STR
 from SirilProver import prove, print_string
 from SirilParser import parse, default_assignments_dict
 from Exceptions import StopProof, SirilError
-import random
 from DummyFile import DummyFile
 
 
@@ -79,17 +78,19 @@ class TestProver(TestCase):
     def test_process(self):
         pass
 
-    def check_final(self, siril, final="true", assertion=True):
+    def check_final(self, siril, final="true", truth=2, assertion=True):
         assignments_dict = self.new_assignments_dict
-        comp, truth = prove(*parse(siril, assignments_dict=assignments_dict)[:2])
+        comp, comp_truth = prove(*parse(siril, assignments_dict=assignments_dict)[:2])
         # print(str(self.file))
         ending = assignments_dict[final][0].replace("#", str(len(comp))).replace("$$", "")
         ending = ending.replace("@", str(comp.current_row)).strip("\"").replace("$", str(comp.number_repeated_rows()))
         ending += "\n"
         if assertion:
             self.assertEqual(ending, self.file.read()[-len(ending):])
+            self.assertEqual(truth, comp_truth)
         else:
             self.assertNotEqual(ending, self.file.read()[-len(ending):])
+            self.assertNotEqual(truth, comp_truth)
 
     def test_plain_bob(self):
         for stage in range(6, 17, 2):
@@ -97,6 +98,7 @@ class TestProver(TestCase):
             {B} bells
             method Plain Bob
             Default Calling Positions
+            bob = +4
             prove 2(W, H)""".format(B=stage)
             self.check_final(siril)
 
@@ -125,14 +127,16 @@ class TestProver(TestCase):
                 {n} extents
                 x = +-
                 prove {x}x""".format(B=stage, n=extents, x=2 * extents + 1)
-                self.check_final(siril, "conflict")
+                # noinspection PyTypeChecker
+                self.check_final(siril, "conflict", None)
 
                 siril = """
                         {B} bells
                         {n} extents
                         x = +-1
                         prove {x}x""".format(B=stage, n=extents, x=2 * extents * stage)
-                self.check_final(siril, "conflict")
+                # noinspection PyTypeChecker
+                self.check_final(siril, "conflict", None)
 
                 siril = """
                         {B} bells
@@ -140,6 +144,7 @@ class TestProver(TestCase):
                         x = +-1
                         conflict= "No dollars"
                         prove {x}x""".format(B=stage, n=extents, x=2 * extents * stage)
-                self.check_final(siril, "conflict", False)
-                self.check_final(siril, "true", False)
-                self.check_final(siril, "false")
+                # noinspection PyTypeChecker
+                self.check_final(siril, "conflict", None, False)
+                self.check_final(siril, "true", 2, False)
+                self.check_final(siril, "false", 0)

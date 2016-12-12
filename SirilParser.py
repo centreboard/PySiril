@@ -27,6 +27,9 @@ def string_parsing(line, assignments_dict, index):
             raise SirilError("String not closed: {}".format(line))
         else:
             string, _, right = right.partition("\"")
+        # Check further statements on line are after a comma or semicolon
+        if right.strip() and right.strip()[0] not in [",", ";"]:
+            raise SirilError("No comma or semicolon between statements: {}".format(right))
         key = "`@{}@`".format(str(index))
         index += 1
         assignments_dict[key] = ("\"{}\"".format(string),)
@@ -98,7 +101,7 @@ def argument_parsing(line, assignments_dict, stage, index):
                 if not char.isdigit():
                     break
             else:
-                raise SirilError("All digits: {}".format(arg))
+                raise SirilError("Argument is all digits: {}".format(arg))
             n = int(arg[:j])
             arg = re.sub(r"\s*\*\s*", "", arg[j:]).strip()
             for _ in range(n):
@@ -113,7 +116,7 @@ def argument_parsing(line, assignments_dict, stage, index):
             out.append("`@break@`")
         elif arg[0] == "@":
             if len(arguments) > 1:
-                raise SirilError("Can't assign test with other statements")
+                raise SirilError("Can't assign test ({}) with other statements".format(arg))
             else:
                 out = get_match(arg[1:])
         else:
@@ -205,7 +208,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
     # Catch trailing commas for line continuation
     text = re.sub(r",\s*\n", ", ", text)
     # Split on new lines and ; that are not within { }
-    lines = re.findall(r"[^\n;]+\{.+}[^\n;]*|[^\n;{]+", text)
+    lines = re.findall(r"[^\n;]+\{.+\}[^\n;]*|[^\n;{]+", text)
     for line in lines:
         line = line.strip()
         if line:
