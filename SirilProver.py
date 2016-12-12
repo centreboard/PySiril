@@ -32,16 +32,20 @@ def prove(assignments_dict, statements):
                 post_comp = Composition(comp.current_row, comp.stage, comp.extents)
                 post_comp = process(post_comp, "post_proof", assignments_dict)
                 comp = process(comp, "true", assignments_dict)
+                truth = 2
             else:
                 comp = process(comp, "notround", assignments_dict)
+                truth = 1
         else:
             comp = process(comp, "false", assignments_dict)
+            truth = 0
     except StopProof as e:
         comp = e.comp
+        truth = 0
     except RuntimeError as e:
         logger.error(traceback.format_exc())
         raise SirilError("RuntimeError: {}".format(e))
-    return comp
+    return comp, truth
 
 
 def process(comp, var, assignments_dict):
