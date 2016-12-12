@@ -98,6 +98,8 @@ def main():
                 t_statement, success = try_prove(t_assignment, t_statement, 0, raise_error=False)
                 if success:
                     file.dump(assignments_dict["`@output@`"])
+                    # Prevent output at the end
+                    args.prove = "`@printed@`"
     # Initialise variable which may be assigned by loop
     stored_line = ""
     truth, file = 0, DummyFile()
@@ -128,6 +130,8 @@ def main():
                     if statements["prove"] is not None:
                         print("Proving:", statements["prove"], file=file)
                         try_prove(t_assignment, t_statement, n, raise_error=False)
+                elif args.prove == "`@printed@`":
+                    pass
                 else:
                     print("Proving:", args.prove, file=file)
                     t_assignment, t_statement, _, success = try_parse(line, args.case, t_assignment, t_statement, index,
