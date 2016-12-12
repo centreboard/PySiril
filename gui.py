@@ -29,10 +29,16 @@ class Main:
     def run_proof(self):
         siril = self.text_in.get(1.0, tk.END)
         print(siril)
-        prove(*parse(siril, self.case_sensitive, self.assignments_dict.copy(), self.statements.copy())[:2])
+        comp, truth = prove(*parse(siril, self.case_sensitive, self.assignments_dict.copy(), self.statements.copy())[:2])
         self.text_out.config(state="normal")
         self.text_out.delete(1.0, tk.END)
         self.text_out.insert(1.0, self.file.read())
+        if truth == 2:
+            self.text_out.config(foreground="green")
+        elif truth == 1:
+            self.text_out.config(foreground="blue")
+        else:
+            self.text_out.config(foreground="red")
         self.text_out.config(state="disabled")
 
 
