@@ -1,5 +1,5 @@
-from math import factorial
 import re
+from math import factorial
 from Exceptions import SirilError
 
 STAGE_DICT_STR_TO_INT = {"0": 10, "E": 11, "T": 12, "A": 13, "B": 14, "C": 15, "D": 16}

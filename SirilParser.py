@@ -1,9 +1,11 @@
 import re
+from textwrap import dedent
+import logging
+import SirilProver
 from CompositionClasses import PlaceNotationPerm, Row, STAGE_DICT_INT_TO_STR
 from Exceptions import SirilError, StopRepeat
-import SirilProver
 from Method_Import import get_method, stages
-import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +27,9 @@ def string_parsing(line, assignments_dict, index):
             raise SirilError("String not closed: {}".format(line))
         else:
             string, _, right = right.partition("\"")
+        # Check further statements on line are after a comma or semicolon
+        if right.strip() and right.strip()[0] not in [",", ";"]:
+            raise SirilError("No comma or semicolon between statements: {}".format(right))
         key = "`@{}@`".format(str(index))
         index += 1
         assignments_dict[key] = ("\"{}\"".format(string),)
@@ -96,7 +101,7 @@ def argument_parsing(line, assignments_dict, stage, index):
                 if not char.isdigit():
                     break
             else:
-                raise SirilError("All digits: {}".format(arg))
+                raise SirilError("Argument is all digits: {}".format(arg))
             n = int(arg[:j])
             arg = re.sub(r"\s*\*\s*", "", arg[j:]).strip()
             for _ in range(n):
@@ -111,7 +116,7 @@ def argument_parsing(line, assignments_dict, stage, index):
             out.append("`@break@`")
         elif arg[0] == "@":
             if len(arguments) > 1:
-                raise SirilError("Can't assign test with other statements")
+                raise SirilError("Can't assign test ({}) with other statements".format(arg))
             else:
                 out = get_match(arg[1:])
         else:
@@ -180,15 +185,20 @@ def repeat_parser(line, assignments_dict, stage, index):
     def repeat(comp, assignments_dict):
         try:
             assignments_dict["`@repeat@`"] = arguments
+            n = 0
             while True:
-                comp = SirilProver.process(comp, "`@repeat@`", assignments_dict)
+                n += 1
+                if n > 100000:
+                    raise SirilError("Recursion Error in repeat loop")
+                comp, assignments_dict = SirilProver.process(comp, "`@repeat@`", assignments_dict)
+
         except StopRepeat:
             return [], comp, assignments_dict
 
     return repeat, index
 
 
-def parse(text, case_sensitive=True, assignments_dict=None, statements=None, index=1):
+def parse(text, case_sensitive=True, assignments_dict=None, statements=None, index=1, assign_prove=True):
     if assignments_dict is None:
         assignments_dict = default_assignments_dict.copy()
     if statements is None:
@@ -198,7 +208,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
     # Catch trailing commas for line continuation
     text = re.sub(r",\s*\n", ", ", text)
     # Split on new lines and ; that are not within { }
-    lines = re.findall(r"[^\n;]+\{.+}[^\n;]*|[^\n;{]+", text)
+    lines = re.findall(r"[^\n;]+\{.+\}[^\n;]*|[^\n;{]+", text)
     for line in lines:
         line = line.strip()
         if line:
@@ -212,7 +222,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     raise SirilError("Definitions cannot start with a number")
                 if not case_sensitive:
                     var = var.lower()
-                if statements["prove"] is None:
+                if statements["prove"] is None and assign_prove:
                     statements["prove"] = var
                 arguments, assignments_dict, index = full_parse(arguments, assignments_dict, statements["bells"],
                                                                 index, case_sensitive)
@@ -259,18 +269,18 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                         method_title += " {}".format(str(stages[statements["bells"]]))
                     method_siril = get_method(method_title, short)
                     assignments_dict, statements, index = parse(method_siril, case_sensitive, assignments_dict,
-                                                                statements, index)
+                                                                statements, index, False)
                 elif line.title() == "Default Calling Positions":
                     tenor = STAGE_DICT_INT_TO_STR[statements["bells"]]
-                    assignments_dict, statements, index = parse(calling_postion_siril(tenor), case_sensitive,
-                                                                assignments_dict, statements, index)
+                    assignments_dict, statements, index = parse(calling_position_siril(tenor), case_sensitive,
+                                                                assignments_dict, statements, index, False)
                 else:
                     if "`@output@`" in assignments_dict:
                         print("Statement has no effect", file=assignments_dict["`@output@`"])
                     else:
                         print("Statement has no effect")
                     logger.info("Statement has no effect")
-    logger.info(text)
+    logger.info("Lines: {}".format(text))
     return assignments_dict, statements, index
 
 
@@ -283,13 +293,14 @@ default_assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow":
 default_statements = {"extents": None, "bells": None, "rounds": None, "prove": None}
 
 
-def calling_postion_siril(tenor):
-    return r"""
-H = repeat(method, {{/*{tenor}?/: b, break; p}})
-sH = repeat(method, {{/*{tenor}?/: s, break; p}})
-W = repeat(method, {{/*{tenor}/: b, break; p}})
-sW = repeat(method, {{/*{tenor}/: s, break; p}})
-M = repeat(method, {{/*{tenor}???/: b, break; p}})
-sM = repeat(method, {{/*{tenor}???/: s, break; p}})
-B = repeat(method, {{/1{tenor}*/: b, break; p}})
-""".format(tenor=tenor)
+def calling_position_siril(tenor):
+    return dedent(r"""
+    H = repeat(method, {{/*{tenor}?/: b, break; p}})
+    sH = repeat(method, {{/*{tenor}?/: s, break; p}})
+    pH = repeat(method, {{/*{tenor}?/: p, break; p}})
+    W = repeat(method, {{/*{tenor}/: b, break; p}})
+    sW = repeat(method, {{/*{tenor}/: s, break; p}})
+    M = repeat(method, {{/*{tenor}???/: b, break; p}})
+    sM = repeat(method, {{/*{tenor}???/: s, break; p}})
+    B = repeat(method, {{/1{tenor}*/: b, break; p}})
+    """.format(tenor=tenor))

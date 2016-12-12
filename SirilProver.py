@@ -1,13 +1,15 @@
 import traceback
 import re
+import logging
 from CompositionClasses import PlaceNotationPerm, Row, Composition
 from Exceptions import SirilError, StopRepeat, StopProof
-import logging
 
 logger = logging.getLogger(__name__)
 
 
-def prove(assignments_dict, statements):
+def prove(in_assignments_dict, in_statements):
+    # Copy to prevent proof affecting assignments elsewhere
+    assignments_dict, statements = in_assignments_dict.copy(), in_statements.copy()
     logger.info("New proof")
     logger.info(assignments_dict)
     logger.info(statements)
@@ -22,26 +24,31 @@ def prove(assignments_dict, statements):
     extents = int(statements["extents"]) if statements["extents"] else 1
     comp = Composition(rounds, stage, extents)
     try:
-        comp = process(comp, "start", assignments_dict)
+        comp, assignments_dict = process(comp, "start", assignments_dict)
         var = statements["prove"]
-        comp = process(comp, var, assignments_dict)
-        comp = process(comp, "finish", assignments_dict)
+        comp, assignments_dict = process(comp, var, assignments_dict)
+        comp, assignments_dict = process(comp, "finish", assignments_dict)
         if comp.is_true(True):
             if comp.current_row == rounds:
                 # Use a copy for post proof
                 post_comp = Composition(comp.current_row, comp.stage, comp.extents)
-                post_comp = process(post_comp, "post_proof", assignments_dict)
-                comp = process(comp, "true", assignments_dict)
+                post_comp, assignments_dict = process(post_comp, "post_proof", assignments_dict)
+                comp, assignments_dict = process(comp, "true", assignments_dict)
+                logger.info("{} rows ending in {}. Composition is true.".format(str(len(comp)), str(comp.current_row)))
                 truth = 2
             else:
-                comp = process(comp, "notround", assignments_dict)
+                comp, assignments_dict = process(comp, "notround", assignments_dict)
                 truth = 1
+                logger.info("{} rows ending in {}. Doesn't end in 'rounds'.".format(str(len(comp)),
+                                                                                    str(comp.current_row)))
         else:
-            comp = process(comp, "false", assignments_dict)
+            comp, assignments_dict = process(comp, "false", assignments_dict)
+            logger.info("{} rows ending in {}. False in {} rows.".format(str(len(comp)), str(comp.current_row),
+                                                                         str(comp.number_repeated_rows())))
             truth = 0
     except StopProof as e:
         comp = e.comp
-        truth = 0
+        truth = None
     except RuntimeError as e:
         logger.error(traceback.format_exc())
         raise SirilError("RuntimeError: {}".format(e))
@@ -53,26 +60,26 @@ def process(comp, var, assignments_dict):
         arguments, comp, assignments_dict = assignments_dict[var](comp, assignments_dict)
         if arguments:
             assignments_dict["`@temp@`"] = arguments
-            comp = process(comp, "`@temp@`", assignments_dict)
+            comp, assignments_dict = process(comp, "`@temp@`", assignments_dict)
     else:
         for arg in assignments_dict[var]:
             if arg == "`@break@`":
                 raise StopRepeat
             elif arg in assignments_dict:
-                comp = process(comp, arg, assignments_dict)
+                comp, assignments_dict = process(comp, arg, assignments_dict)
             elif isinstance(arg, PlaceNotationPerm):
                 for perm in arg:
                     comp.apply_perm(perm)
-                    comp = process(comp, "everyrow", assignments_dict)
+                    comp, assignments_dict = process(comp, "everyrow", assignments_dict)
                     if not comp.is_true():
-                        comp = process(comp, "conflict", assignments_dict)
+                        comp, assignments_dict = process(comp, "conflict", assignments_dict)
                     if comp.current_row == assignments_dict["`@rounds@`"]:
-                        comp = process(comp, "rounds", assignments_dict)
+                        comp, assignments_dict = process(comp, "rounds", assignments_dict)
             elif arg.startswith("\""):
                 print_string(comp, arg, assignments_dict, var)
             else:
                 raise SirilError("Unknown assignment: {}".format(arg))
-    return comp
+    return comp, assignments_dict
 
 
 def print_string(comp, arg, assignments_dict, var):
@@ -98,7 +105,7 @@ def print_string(comp, arg, assignments_dict, var):
             print(output, end=end)
         if var != "abort":
             # Prevent recursion
-            comp = process(comp, "abort", assignments_dict)
+            comp, assignments_dict = process(comp, "abort", assignments_dict)
         raise StopProof(comp)
     if "$" in output:
         output = output.replace("$", str(comp.number_repeated_rows()))

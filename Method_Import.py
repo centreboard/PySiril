@@ -1,7 +1,6 @@
-from textwrap import dedent
-
 import requests
 import xml.etree.cElementTree as ElementTree
+from textwrap import dedent
 from Exceptions import MethodImportError
 from CompositionClasses import STAGE_DICT_INT_TO_STR
 
@@ -37,14 +36,19 @@ def get_method(method_title, short=""):
     if len(method_data_1) != 0:
         notation = method_data_1[0].text
         le = method_data_1[1].text
-        return dedent("""lh = ""\nfinish = lh, finish\n{short} = lh, &{notation}, {short}_lh\n
-                    {short}_pn = &{notation}\nmethod = {short}
-                    {short}_lh = (p = lh = {short}_p), (b = lh = {short}_b), (s = lh = {short}_s), (lh={short}_p)
-                    {short}_p = &{le} \n{short}_b = bob, "- @"
-                    {short}_s = single, "s @\"""".format(short=short, notation=notation, le=le))
+        return dedent("""
+        lh = ""
+        finish = lh, finish
+        method = {short}
+        {short} = (method = lh, {short}_pn, {short}_lh), method
+        {short}_pn = &{notation}
+        {short}_lh = (p = lh = {short}_p), (b = lh = {short}_b), (s = lh = {short}_s), (lh={short}_p)
+        {short}_p = &{le}
+        {short}_b = bob, "- @"
+        {short}_s = single, "s @\"""".format(short=short, notation=notation, le=le))
 
     elif len(method_data_2) != 0:
         notation = method_data_2[0].text
-        return "{short} = +{notation}".format(short=short, notation=notation)
+        return "{short} = +{notation}, (p={short})".format(short=short, notation=notation)
     else:
         raise MethodImportError(method_title)
