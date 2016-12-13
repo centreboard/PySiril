@@ -104,6 +104,7 @@ def argument_parsing(line, assignments_dict, stage, index):
                 raise SirilError("Argument is all digits: {}".format(arg))
             n = int(arg[:j])
             arg = re.sub(r"\s*\*\s*", "", arg[j:]).strip()
+            # TODO: if arg not in assignments_dict
             for _ in range(n):
                 out.append(arg)
         elif re.fullmatch(r"repeat\s*`@[0-9]+@`", arg):
@@ -256,7 +257,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     assignments_dict["`@prove@`"], assignments_dict, index = full_parse(line[6:].strip(),
                                                                                         assignments_dict,
                                                                                         statements["bells"], index)
-                elif line.lower().startswith("method "):
+                elif statements["bells"] is not None and line.lower().startswith("method "):
                     if "\"" in line:
                         method_title, short = line.split("\"")[:2]
                         method_title = method_title[7:].strip()
@@ -271,7 +272,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     method_siril = get_method(method_title, short)
                     assignments_dict, statements, index = parse(method_siril, case_sensitive, assignments_dict,
                                                                 statements, index, False)
-                elif line.title() == "Calling Positions":
+                elif statements["bells"] is not None and line.title() == "Calling Positions":
                     tenor = STAGE_DICT_INT_TO_STR[statements["bells"]]
                     assignments_dict, statements, index = parse(calling_position_siril(tenor), case_sensitive,
                                                                 assignments_dict, statements, index, False)
@@ -289,6 +290,8 @@ default_assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow":
                             "true": ("\"# rows ending in @\nTouch is true\"",),
                             "notround": ("\"# rows ending in @\nIs this OK?\"",),
                             "false": ("\"# rows ending in @\nTouch is false in $ rows\"",),
+                            "notextent": (
+                                "\"# rows ending in @\nNot all rows appear at least (no. extents - 1) times\"",),
                             "@": ("[:]",)}
 default_statements = {"extents": None, "bells": None, "rounds": None, "prove": None}
 

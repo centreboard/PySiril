@@ -57,20 +57,21 @@ class Composition:
                         self._true = False
                         break
                 else:
+                    # Set row_set to last set, as most interested if row is in this one. The row cascades down when it
+                    # becomes dirty.
                     self._true = True
                     self.row_set = test_sets[-1]
-                    # Set to last set, as most interested if row is in this one. The row cascades down when it
-                    # becomes dirty.
                 if final:
                     # Checks if row used n or n-1 times
                     for i in range(self.extents - 1):
                         if len(test_sets[i]) < factorial(self.stage):
-                            self._true = False
+                            self._true = None
                             break
         return self._true
 
     def number_repeated_rows(self):
         """Returns number of rows featuring n + 1 times (i.e. are false in a n extent composition"""
+        # This is <= len(row_set) as rows are first added to row_set instead of lower down.
         test_sets = [set() for _ in range(self.extents + 1)]
         for row in self.rows:
             for t_set in test_sets:

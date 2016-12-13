@@ -6,6 +6,8 @@ from SirilProver import prove
 from Exceptions import SirilError
 from DummyFile import DummyFile
 
+__version__ = "0.1"
+
 
 def try_parse(siril, case_sensitive, assignments_dict, statements, index, line_n, assign_prove, raise_error=False):
     assignments_dict_cache, statements_cache = assignments_dict.copy(), statements.copy()
@@ -52,6 +54,7 @@ def main():
     parser.add_argument('infile', nargs='?', type=argparse.FileType('r'), default=sys.stdin)
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
     args = parser.parse_args()
+    print("PySiril")
 
     index = 1
     assignments_dict = default_assignments_dict

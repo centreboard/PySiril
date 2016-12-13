@@ -24,6 +24,9 @@ class TestProver(TestCase):
     def new_assignments_dict(self):
         return self.default_assignments_dict.copy()
 
+    def assertRaisesSiril(self, callableObj=None, *args, **kwargs):
+        self.assertRaises(SirilError, callableObj, *args, **kwargs)
+
     def test_print_string(self):
         for stage in range(1, 17):
             for extents in range(1, 10):
@@ -41,7 +44,7 @@ class TestProver(TestCase):
                 self.assertEqual(self.file.read(), "{row}{row} Aborting.\nRow={abortrow}\n".format(row=rounds,
                                                                                                    abortrow=abort_row))
                 # Test for quote closure
-                self.assertRaises(SirilError, print_string, comp, "\"Not closed", self.default_assignments_dict, "")
+                self.assertRaisesSiril(print_string, comp, "\"Not closed", self.default_assignments_dict, "")
                 self.file.read()
                 for _ in range(20):
                     # Testing row formatting
@@ -78,7 +81,7 @@ class TestProver(TestCase):
     def test_process(self):
         pass
 
-    def check_final(self, siril, final="true", truth=2, assertion=True):
+    def check_final(self, siril, final="true", truth=3, assertion=True):
         assignments_dict = self.new_assignments_dict
         comp, comp_truth = prove(*parse(siril, assignments_dict=assignments_dict)[:2])
         # print(str(self.file))
@@ -97,9 +100,31 @@ class TestProver(TestCase):
             siril = """
             {B} bells
             method Plain Bob
-            Default Calling Positions
+            Calling Positions
             bob = +4
             prove 2(W, H)""".format(B=stage)
+            self.check_final(siril)
+            siril = """
+            {B} bells
+            method Plain Bob
+            Calling Positions
+            bob = +4
+            single = +234
+            prove 2(W, H, W, sH)""".format(B=stage)
+            self.check_final(siril)
+            siril = """
+            {B} bells
+            method Plain Bob
+            Calling Positions
+            //bob = +4
+            single = +234
+            prove 2(W, H, W, sH)""".format(B=stage)
+            self.assertRaisesSiril(self.check_final, siril)
+            siril = """
+            {B} Bells
+            method Plain Bob "PB"
+            bob = +4
+            prove PB, 2(b, {x}p, b)""".format(B=stage, x=stage-3)
             self.check_final(siril)
 
     def test_stedman(self):
@@ -146,5 +171,18 @@ class TestProver(TestCase):
                         prove {x}x""".format(B=stage, n=extents, x=2 * extents * stage)
                 # noinspection PyTypeChecker
                 self.check_final(siril, "conflict", None, False)
-                self.check_final(siril, "true", 2, False)
-                self.check_final(siril, "false", 0)
+                self.check_final(siril, "true", assertion=False)
+                if extents == 1:
+                    self.check_final(siril, "false", 0)
+                else:
+                    self.check_final(siril, "notextent", 2)
+                siril = """
+                        {B} bells
+                        {n} extents
+                        x = +-1
+                        conflict= "No dollars"
+                        prove {x}x""".format(B=stage, n=extents, x=2 * extents * stage + 1)
+                if extents > 1:
+                    self.check_final(siril, "notround", 1)
+                else:
+                    self.check_final(siril, "false", 0)

@@ -350,9 +350,9 @@ if __name__ == '__main__':
 
         """
     test_input_8 = r"""
-        /  5075 Grandsire Caters
-        /  Composed by S A Bond
-        /  5075 no. 2
+        //  5075 Grandsire Caters
+        //  Composed by S A Bond
+        //  5075 no. 2
 
         9 bells
 
@@ -467,6 +467,12 @@ if __name__ == '__main__':
     10 bells
     method Bristol Surprise Royal "B"
     prove 9B"""
+
+    test_input_11 = r"""
+    7 bells
+    method Stedman
+    mrj177 = St, b, p, s, 3p, b, 3p, s, 2p, s, 3p, s, 3p, b, p, b, 3p, b, p, +567
+    """
 
     run(test_input_1)
     run(test_input_2)

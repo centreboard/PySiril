@@ -28,19 +28,26 @@ def prove(in_assignments_dict, in_statements):
         var = statements["prove"]
         comp, assignments_dict = process(comp, var, assignments_dict)
         comp, assignments_dict = process(comp, "finish", assignments_dict)
-        if comp.is_true(True):
-            if comp.current_row == rounds:
-                # Use a copy for post proof
-                post_comp = Composition(comp.current_row, comp.stage, comp.extents)
-                post_comp, assignments_dict = process(post_comp, "post_proof", assignments_dict)
-                comp, assignments_dict = process(comp, "true", assignments_dict)
-                logger.info("{} rows ending in {}. Composition is true.".format(str(len(comp)), str(comp.current_row)))
-                truth = 2
-            else:
-                comp, assignments_dict = process(comp, "notround", assignments_dict)
-                truth = 1
-                logger.info("{} rows ending in {}. Doesn't end in 'rounds'.".format(str(len(comp)),
-                                                                                    str(comp.current_row)))
+        final_truth = comp.is_true(True)
+        if final_truth and comp.current_row == rounds:
+            # Use a copy for post proof
+            post_comp = Composition(comp.current_row, comp.stage, comp.extents)
+            post_comp, assignments_dict = process(post_comp, "post_proof", assignments_dict)
+            comp, assignments_dict = process(comp, "true", assignments_dict)
+            logger.info("{} rows ending in {}. Composition is true.".format(str(len(comp)), str(comp.current_row)))
+            truth = 3
+        elif final_truth is None and comp.current_row == rounds:
+            comp, assignments_dict = process(comp, "notextent", assignments_dict)
+            logger.info("{} rows ending in {}. Not all rows appear at least {} times.".format(str(len(comp)),
+                                                                                              str(comp.current_row),
+                                                                                              str(extents)))
+            truth = 2
+        elif final_truth != 0:
+            # Note this is not the same as not final_truth as catching case where final_truth is None but not at rounds
+            comp, assignments_dict = process(comp, "notround", assignments_dict)
+            truth = 1
+            logger.info("{} rows ending in {}. Doesn't end in 'rounds'.".format(str(len(comp)),
+                                                                                str(comp.current_row)))
         else:
             comp, assignments_dict = process(comp, "false", assignments_dict)
             logger.info("{} rows ending in {}. False in {} rows.".format(str(len(comp)), str(comp.current_row),
