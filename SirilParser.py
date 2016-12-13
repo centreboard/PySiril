@@ -212,7 +212,6 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
     text = re.sub(r",\s*\n", ", ", text)
     # Split on new lines and ; that are not within { }
     lines = re.findall(r"[^\n;]+\{.+\}[^\n;]*|[^\n;{]+", text)
-    #with method_cache:
     for line in lines:
             line = line.strip()
             if line:
@@ -298,8 +297,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     elif statements["bells"] is not None and line.title() == "Calling Positions":
                         tenor = STAGE_DICT_INT_TO_STR[statements["bells"]]
                         assignments_dict, statements, index = parse(calling_position_siril(tenor), case_sensitive,
-                                                                    assignments_dict, statements, index, False,
-                                                                    method_cache)
+                                                                    assignments_dict, statements, index, False)
                     else:
                         if "`@output@`" in assignments_dict:
                             print("Statement has no effect:", line, file=assignments_dict["`@output@`"])

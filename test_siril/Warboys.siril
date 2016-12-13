@@ -7,13 +7,14 @@ finish = finish, ""
 print_p = print_method
 print_b = print_method, "", "- @ \"
 print_s = print_method, "", "s @ \"
-peal = "  @ \",2(No, Ne, Ad, Ws, b, Ad, b, Ws, b, Wk, b, Wm, Lf, Bm, Wm, b, Ab, Wk, Ab, Ro, Ro, b, St, Bc, St, b, Wk),
-(No, Ne, Ws, Ws, b, Ad, b, Ws, b, Wk, b, Wm, Lf, Bm, Wm, b, Ab, Wk, Ab, Ro, Ro, b, St, Bc, St, b, Wk),
- (Cl, b, Wo, Wh, Nw, b, Cl, Ch, Cl, b, Nb, b, Mo, Sa), 
- 2(Cl, b, Wo, Wh, Nw, b, Cl, Ch, Cl, b, Nb, b, Ct, Sa), 
- (Ch, b, Nb, Mu, Nw, Sa, b, Nb, 2b, Mu, Cl, b),
- 2(Ch, b, Nb, Mu, Ak, Sa, b, Nb, 2b, Mu, Cl, b),
- 3(Ip, Bo, Ip, Cm, b, Yo, Cm, Du, Du, b, Hu, Pr, Nf, Nf, b, Du, b, Bv, Bk, Bk, b, He, Su, Su, b, Yo, b), 
- 2(Lo, Ke, Lo, b, Li, Co, b, Lo, Ke, Lo, b, Li, b, Cu, Li, b), 
- (We, Ke, We, b, Co, Co, b, We, Ke, We, b, Li, b, Cu, Li, b)
- prove peal
+No_over_A = No, Ne, Ad, Ws, b, Ad, b, Ws, b, Wk, b, Wm, Lf, Bm, Wm, b, Ab, Wk, Ab, Ro, Ro, b, St, Bc, St, b, Wk
+No_over_B = No, Ne, Ws, Ws, b, Ad, b, Ws, b, Wk, b, Wm, Lf, Bm, Wm, b, Ab, Wk, Ab, Ro, Ro, b, St, Bc, St, b, Wk
+Cl_over_A = Cl, b, Wo, Wh, Nw, b, Cl, Ch, Cl, b, Nb, b, Mo, Sa
+Cl_over_B = Cl, b, Wo, Wh, Nw, b, Cl, Ch, Cl, b, Nb, b, Ct, Sa
+Cl_over_C = Ch, b, Nb, Mu, Nw, Sa, b, Nb, 2b, Mu, Cl, b
+Cl_over_D = Ch, b, Nb, Mu, Ak, Sa, b, Nb, 2b, Mu, Cl, b
+Cm_over = Ip, Bo, Ip, Cm, b, Yo, Cm, Du, Du, b, Hu, Pr, Nf, Nf, b, Du, b, Bv, Bk, Bk, b, He, Su, Su, b, Yo, b
+Lo_over_A = Lo, Ke, Lo, b, Li, Co, b, Lo, Ke, Lo, b, Li, b, Cu, Li, b
+Lo_over_B = We, Ke, We, b, Co, Co, b, We, Ke, We, b, Li, b, Cu, Li, b
+peal = "  @ \",2 No_over_A, No_over_B, Cl_over_A, 2 Cl_over_B, Cl_over_C, 2 Cl_over_D, 3 Cm_over, 2 Lo_over_A, Lo_over_B
+prove peal
