@@ -1,9 +1,10 @@
+import os
 import re
 from textwrap import dedent
 import logging
 import SirilProver
 from CompositionClasses import PlaceNotationPerm, Row, STAGE_DICT_INT_TO_STR
-from Exceptions import SirilError, StopRepeat
+from Exceptions import SirilError, StopRepeat, ImportFileNotFound
 from Method_Import import get_method, stages
 
 
@@ -211,77 +212,100 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
     text = re.sub(r",\s*\n", ", ", text)
     # Split on new lines and ; that are not within { }
     lines = re.findall(r"[^\n;]+\{.+\}[^\n;]*|[^\n;{]+", text)
+    #with method_cache:
     for line in lines:
-        line = line.strip()
-        if line:
-            if "=" in line:
-                # Assignment
-                if statements["bells"] is None:
-                    raise SirilError("Number of bells must be defined before assignment")
-                var, _, arguments = line.partition("=")
-                var = var.strip()
-                if var[0].isdigit():
-                    raise SirilError("Definitions cannot start with a number")
-                if not case_sensitive:
-                    var = var.lower()
-                if statements["prove"] is None and assign_prove:
-                    statements["prove"] = var
-                arguments, assignments_dict, index = full_parse(arguments, assignments_dict, statements["bells"],
-                                                                index, case_sensitive)
-                if not callable(arguments) and var in arguments:
-                    new_arguments = []
-                    for x in arguments:
-                        if x == var:
-                            new_arguments.extend(assignments_dict[var])
-                        else:
-                            new_arguments.append(x)
-                    arguments = new_arguments
-                assignments_dict[var] = arguments
-            else:
-                # Statement
-                match = re.match(r"([0-9]+)\s+(extents|bells)", line.lower())
-                if match:
-                    if statements[match.group(2)] is not None:
-                        raise SirilError("Trying to reassign {}".format(match.group(2)))
-                    statements[match.group(2)] = int(match.group(1))
-                elif line.lower().startswith("rounds "):
-                    statements["rounds"] = Row(line[7:].strip())
-                    if statements["bells"] is not None:
-                        if statements["rounds"].stage != statements["bells"]:
-                            raise SirilError("Rounds not same length as number of bells")
-                    else:
-                        statements["bells"] = statements["rounds"].stage
-                elif line.lower().startswith("prove "):
-                    # To cope with assignment in the prove statement
-                    statements["prove"] = "`@prove@`"
-                    assignments_dict["`@prove@`"], assignments_dict, index = full_parse(line[6:].strip(),
-                                                                                        assignments_dict,
-                                                                                        statements["bells"], index)
-                elif statements["bells"] is not None and line.lower().startswith("method "):
-                    if "\"" in line:
-                        method_title, short = line.split("\"")[:2]
-                        method_title = method_title[7:].strip()
-                    else:
-                        method_title = line[7:].strip()
-                        short = method_title[:2]
-                    for stage, title in stages.items():
-                        if method_title.lower().endswith(title):
-                            break
-                    else:
-                        method_title += " {}".format(str(stages[statements["bells"]]))
-                    method_siril = get_method(method_title, short)
-                    assignments_dict, statements, index = parse(method_siril, case_sensitive, assignments_dict,
-                                                                statements, index, False)
-                elif statements["bells"] is not None and line.title() == "Calling Positions":
-                    tenor = STAGE_DICT_INT_TO_STR[statements["bells"]]
-                    assignments_dict, statements, index = parse(calling_position_siril(tenor), case_sensitive,
-                                                                assignments_dict, statements, index, False)
+            line = line.strip()
+            if line:
+                if "=" in line:
+                    # Assignment
+                    if statements["bells"] is None:
+                        raise SirilError("Number of bells must be defined before assignment")
+                    var, _, arguments = line.partition("=")
+                    var = var.strip()
+                    if var[0].isdigit():
+                        raise SirilError("Definitions cannot start with a number")
+                    if not case_sensitive:
+                        var = var.lower()
+                    if statements["prove"] is None and assign_prove:
+                        statements["prove"] = var
+                    arguments, assignments_dict, index = full_parse(arguments, assignments_dict, statements["bells"],
+                                                                    index, case_sensitive)
+                    if not callable(arguments) and var in arguments:
+                        new_arguments = []
+                        for x in arguments:
+                            if x == var:
+                                new_arguments.extend(assignments_dict[var])
+                            else:
+                                new_arguments.append(x)
+                        arguments = new_arguments
+                    assignments_dict[var] = arguments
                 else:
-                    if "`@output@`" in assignments_dict:
-                        print("Statement has no effect:", line, file=assignments_dict["`@output@`"])
+                    # Statement
+                    match = re.match(r"([0-9]+)\s+(extents|bells)", line.lower())
+                    if match:
+                        if statements[match.group(2)] == "bells":
+                            if int(match.group(1)) == statements[match.group(2)]:
+                                logger.info("Assigning bells to same value")
+                            else:
+                                raise SirilError("Trying to reassign bells")
+                        else:
+                            statements[match.group(2)] = int(match.group(1))
+                    elif line.lower().startswith("import "):
+                        file_name = "{}.siril".format(line[7:]) if "." not in line else line[7:]
+                        for dirpath, dirs, files in os.walk("./"):
+                            if dirpath.startswith("./.git"):
+                                continue
+                            for name in files:
+                                if name == file_name:
+                                    file_name = os.path.join(dirpath, name)
+                                    break
+                        try:
+                            with open(file_name) as f:
+                                for import_line in f:
+                                    assignments_dict, statements, index = parse(import_line,case_sensitive,
+                                                                                assignments_dict, statements, index,
+                                                                                False)
+                        except FileNotFoundError:
+                            raise ImportFileNotFound(line[7:])
+                    elif line.lower().startswith("rounds "):
+                        statements["rounds"] = Row(line[7:].strip())
+                        if statements["bells"] is not None:
+                            if statements["rounds"].stage != statements["bells"]:
+                                raise SirilError("Rounds not same length as number of bells")
+                        else:
+                            statements["bells"] = statements["rounds"].stage
+                    elif line.lower().startswith("prove "):
+                        # To cope with assignment in the prove statement
+                        statements["prove"] = "`@prove@`"
+                        assignments_dict["`@prove@`"], assignments_dict, index = full_parse(line[6:].strip(),
+                                                                                            assignments_dict,
+                                                                                            statements["bells"], index)
+                    elif statements["bells"] is not None and line.lower().startswith("method "):
+                        if "\"" in line:
+                            method_title, short = line.split("\"")[:2]
+                            method_title = method_title[7:].strip()
+                        else:
+                            method_title = line[7:].strip()
+                            short = method_title[:2]
+                        for stage, title in stages.items():
+                            if method_title.lower().endswith(title):
+                                break
+                        else:
+                            method_title += " {}".format(str(stages[statements["bells"]]))
+                        method_siril = get_method(method_title, short)
+                        assignments_dict, statements, index = parse(method_siril, case_sensitive, assignments_dict,
+                                                                    statements, index, False)
+                    elif statements["bells"] is not None and line.title() == "Calling Positions":
+                        tenor = STAGE_DICT_INT_TO_STR[statements["bells"]]
+                        assignments_dict, statements, index = parse(calling_position_siril(tenor), case_sensitive,
+                                                                    assignments_dict, statements, index, False,
+                                                                    method_cache)
                     else:
-                        print("Statement has no effect:", line)
-                    logger.info("Statement has no effect: {}".format(line))
+                        if "`@output@`" in assignments_dict:
+                            print("Statement has no effect:", line, file=assignments_dict["`@output@`"])
+                        else:
+                            print("Statement has no effect:", line)
+                        logger.info("Statement has no effect: {}".format(line))
     return assignments_dict, statements, index
 
 

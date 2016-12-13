@@ -1,0 +1,19 @@
+6 bells
+7 extents
+import 41 Surprise Minor Methods
+bob = +4
+@ = [1:]
+finish = finish, ""
+print_p = print_method
+print_b = print_method, "", "- @ \"
+print_s = print_method, "", "s @ \"
+peal = "  @ \",2(No, Ne, Ad, Ws, b, Ad, b, Ws, b, Wk, b, Wm, Lf, Bm, Wm, b, Ab, Wk, Ab, Ro, Ro, b, St, Bc, St, b, Wk),
+(No, Ne, Ws, Ws, b, Ad, b, Ws, b, Wk, b, Wm, Lf, Bm, Wm, b, Ab, Wk, Ab, Ro, Ro, b, St, Bc, St, b, Wk),
+ (Cl, b, Wo, Wh, Nw, b, Cl, Ch, Cl, b, Nb, b, Mo, Sa), 
+ 2(Cl, b, Wo, Wh, Nw, b, Cl, Ch, Cl, b, Nb, b, Ct, Sa), 
+ (Ch, b, Nb, Mu, Nw, Sa, b, Nb, 2b, Mu, Cl, b),
+ 2(Ch, b, Nb, Mu, Ak, Sa, b, Nb, 2b, Mu, Cl, b),
+ 3(Ip, Bo, Ip, Cm, b, Yo, Cm, Du, Du, b, Hu, Pr, Nf, Nf, b, Du, b, Bv, Bk, Bk, b, He, Su, Su, b, Yo, b), 
+ 2(Lo, Ke, Lo, b, Li, Co, b, Lo, Ke, Lo, b, Li, b, Cu, Li, b), 
+ (We, Ke, We, b, Co, Co, b, We, Ke, We, b, Li, b, Cu, Li, b)
+ prove peal

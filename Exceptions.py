@@ -26,3 +26,8 @@ class StopProof(Exception):
 class MethodImportError(SirilError):
     def __init__(self, title, *args):
         super().__init__("MethodImportError: {}".format(title), *args)
+
+
+class ImportFileNotFound(SirilError, FileNotFoundError):
+    def __init__(self, file_name, *args):
+        super().__init__("ImportFileNotFound: {}".format(file_name), args)
