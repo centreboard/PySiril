@@ -80,11 +80,11 @@ with MethodCache() as cache:
                                    n2=STAGE_DICT_INT_TO_STR[stage - 2]))
         elif method_title.lower().startswith("grandsire"):
             for stage, name in stages.items():
-                if stage % 2 and method_title.lower() == "grandsire {}".format(name):
+                if stage > 2 and method_title.lower() == "grandsire {}".format(name):
                     if not short:
                         short = "Gr"
                     notation = "+3.1, {n2} (+-.1) // - defaults to n when n is odd stage".format(n2=stage-2)
-                    le = "+{n}.1".format(n=stage)
+                    le = "+-.1"
                     break
         if not notation:
             notation, le = cache.get(method_title)
