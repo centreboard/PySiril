@@ -37,15 +37,18 @@ def get_method(method_title, short=""):
         notation = method_data_1[0].text
         le = method_data_1[1].text
         return dedent("""
-        lh = ""
+        lh = "\"
         finish = lh, finish
-        method = {short}
+        method = lh, {short}_pn, {short}_lh
         {short} = (method = lh, {short}_pn, {short}_lh), method
         {short}_pn = &{notation}
-        {short}_lh = (p = lh = {short}_p), (b = lh = {short}_b), (s = lh = {short}_s), (lh={short}_p)
+        {short}_lh = (p = (lh = {short}_p), {short}_full_lead), (b = (lh = {short}_b), {short}_full_lead),
+                     (s = (lh = {short}_s), {short}_full_lead), (lh={short}_p)
+        {short}_full_lead = (p = lh, {short}_pn, (lh = {short}_p)), (b = lh, {short}_pn, (lh = {short}_b)),
+                            (s = lh, {short}_pn, lh = {short}_pn)
         {short}_p = &{le}
-        {short}_b = bob, "- @"
-        {short}_s = single, "s @\"""".format(short=short, notation=notation, le=le))
+        {short}_b = bob, "- @" ,{short}_full_lead
+        {short}_s = single, "s @", {short}_full_lead""".format(short=short, notation=notation, le=le))
 
     elif len(method_data_2) != 0:
         notation = method_data_2[0].text

@@ -77,15 +77,14 @@ def main():
     if args.single is not None:
         line = " ".join(("single =", args.single))
         assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
-                                                                 0,
-                                                                 False, raise_error)
+                                                                 0, False, raise_error)
     if args.method is not None:
         line = " ".join(("method", args.method))
         assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements, index,
                                                                  0, False, raise_error)
     if statements["bells"]:
         if import_calling_position:
-            line = "Default Calling Positions"
+            line = "Calling Positions"
             assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements,
                                                                      index, 0, False, raise_error)
             if success:
@@ -119,7 +118,7 @@ def main():
                                                                  n, True, raise_error)
         if statements["bells"]:
             if import_calling_position:
-                line = "Default Calling Positions"
+                line = "Calling Positions"
                 assignments_dict, statements, index, success = try_parse(line, args.case, assignments_dict, statements,
                                                                          index, n, False, raise_error)
                 if success:
