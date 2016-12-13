@@ -1,6 +1,6 @@
 import tkinter as tk
-from SirilProver import prove
-from SirilParser import parse, default_assignments_dict, default_statements
+from SirilParser import default_assignments_dict, default_statements
+from PySiril import try_prove, try_parse
 
 
 # Setup tkinter
@@ -27,15 +27,23 @@ class Main:
         self.root.mainloop()
 
     def run_proof(self):
+        # Flush the buffer
+        self.file.read()
         siril = self.text_in.get(1.0, tk.END)
         print(siril)
-        comp, truth = prove(*parse(siril, self.case_sensitive, self.assignments_dict.copy(), self.statements.copy())[:2])
+        truth = None
+        assignments_dict, statements, index, success = try_parse(siril, self.case_sensitive,
+                                                                 self.assignments_dict.copy(), self.statements.copy(),
+                                                                 1, 0, True)
+        if success:
+            statements, truth = try_prove(assignments_dict, statements, 0)
+        print(str(self.file))
         self.text_out.config(state="normal")
         self.text_out.delete(1.0, tk.END)
         self.text_out.insert(1.0, self.file.read())
-        if truth == 2:
+        if truth == 3:
             self.text_out.config(foreground="green")
-        elif truth == 1:
+        elif truth:
             self.text_out.config(foreground="blue")
         else:
             self.text_out.config(foreground="red")
