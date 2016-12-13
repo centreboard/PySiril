@@ -203,6 +203,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
         assignments_dict = default_assignments_dict.copy()
     if statements is None:
         statements = default_statements.copy()
+    logger.info("Lines: {}".format(text))
     # Ignore comments
     text = re.sub(r"//[^\n]*", "", text)
     # Catch trailing commas for line continuation
@@ -270,17 +271,16 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ind
                     method_siril = get_method(method_title, short)
                     assignments_dict, statements, index = parse(method_siril, case_sensitive, assignments_dict,
                                                                 statements, index, False)
-                elif line.title() == "Default Calling Positions":
+                elif line.title() == "Calling Positions":
                     tenor = STAGE_DICT_INT_TO_STR[statements["bells"]]
                     assignments_dict, statements, index = parse(calling_position_siril(tenor), case_sensitive,
                                                                 assignments_dict, statements, index, False)
                 else:
                     if "`@output@`" in assignments_dict:
-                        print("Statement has no effect", file=assignments_dict["`@output@`"])
+                        print("Statement has no effect:", line, file=assignments_dict["`@output@`"])
                     else:
-                        print("Statement has no effect")
-                    logger.info("Statement has no effect")
-    logger.info("Lines: {}".format(text))
+                        print("Statement has no effect:", line)
+                    logger.info("Statement has no effect: {}".format(line))
     return assignments_dict, statements, index
 
 
