@@ -17,6 +17,8 @@ def prove(in_assignments_dict, in_statements):
         stage = int(statements["bells"])
     except ValueError:
         raise SirilError("Number of bells undefined")
+    except TypeError:
+        raise SirilError("Number of bells undefined")
     rounds = statements["rounds"]
     if rounds is None:
         rounds = Row(range(1, stage + 1))

@@ -13,7 +13,7 @@ def get_method(method_title, short=""):
     le = ""
     if method_title.lower().startswith("stedman"):
         for stage, name in stages.items():
-            if stage % 2 and method_title.lower() == "stedman {}".format(name):
+            if stage % 2 and stage >= 7 and method_title.lower() == "stedman {}".format(name):
                 if not short:
                     short = "St"
                 return dedent("""
@@ -31,7 +31,7 @@ def get_method(method_title, short=""):
             if stage % 2 and method_title.lower() == "grandsire {}".format(name):
                 if not short:
                     short = "Gr"
-                notation = "+3.1, {n2} (+{n}.1)".format(n2=stage-2, n=stage)
+                notation = "+3.1, {n2} (+-.1) // - defaults to n when n is odd stage".format(n2=stage-2)
                 le = "+{n}.1".format(n=stage)
                 break
     if not notation:
@@ -45,8 +45,8 @@ def get_method(method_title, short=""):
         if not short:
             short = method_title[:2]
         if len(method_data_1) != 0:
-            notation = method_data_1[0].text
-            le = method_data_1[1].text
+            notation = "&" + method_data_1[0].text
+            le = "&" + method_data_1[1].text
         elif len(method_data_2) != 0:
             notation = method_data_2[0].text
             le = ""
@@ -62,7 +62,7 @@ def get_method(method_title, short=""):
         {short}_lh = (p = (lh = {short}_p), {short}_full_lead), (b = (lh = {short}_b), {short}_full_lead),
                      (s = (lh = {short}_s), {short}_full_lead), (lh={short}_p)
         {short}_full_lead = (p = lh, {short}_pn, (lh = {short}_p)), (b = lh, {short}_pn, (lh = {short}_b)),
-                            (s = lh, {short}_pn, lh = {short}_pn)
+                            (s = lh, {short}_pn, lh = {short}_s)
         // Assign bob and single to desired place notation, e.g. bob = +4; single = +234
         // For different methods with different bobs add a dynamic assignment to the short method name
         // E.g for Belfast with 4ths place bobs, Glasgow with 6ths place
