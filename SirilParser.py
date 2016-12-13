@@ -27,8 +27,8 @@ def string_parsing(line, assignments_dict, index):
             raise SirilError("String not closed: {}".format(line))
         else:
             string, _, right = right.partition("\"")
-        # Check further statements on line are after a comma or semicolon
-        if right.strip() and right.strip()[0] not in [",", ";"]:
+        # Check further statements on line are after a comma or semicolon or bracket
+        if right.strip() and right.strip()[0] not in [",", ";", ")", "}"]:
             raise SirilError("No comma or semicolon between statements: {}".format(right))
         key = "`@{}@`".format(str(index))
         index += 1
