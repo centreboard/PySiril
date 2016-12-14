@@ -13,7 +13,8 @@ class MethodCache:
     def __init__(self, file_name="MethodCache.siril"):
         self.cache = {}
         self.file_name = file_name
-        if not os.path.exists(file_name):
+        if not os.path.isfile(file_name):
+            # Create it
             with open(file_name, "w"):
                 print("Creating new method cache")
 
