@@ -25,17 +25,17 @@ class TestParse(TestCase):
         self.fail()
 
     def test_string_parsing(self):
-        index = 1
         line = "\"Test\""
         assignments_dict = self.new_assignments_dict
-        out_line, assignments_dict, index = string_parsing(line, assignments_dict, index)
+        out_line, assignments_dict\
+            = string_parsing(line, assignments_dict)
         self.assertNotIn(line, assignments_dict)
         self.assertNotIn("\"", out_line)
         self.assertIn(out_line, assignments_dict)
 
         error_lines = ["\"", "\"\"\"\"", "\"No comma\" b"]
         for line in error_lines:
-            self.assertRaises(SirilError, string_parsing, line, assignments_dict, index)
+            self.assertRaises(SirilError, string_parsing, line, assignments_dict)
 
 
 class TestFunction(TestCase):

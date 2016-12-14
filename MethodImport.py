@@ -12,26 +12,30 @@ stages = {4: "minimus", 5: "doubles", 6: "minor", 7: "triples", 8: "major", 9: "
 class MethodCache:
     def __init__(self, file_name="MethodCache.siril"):
         self.cache = {}
+        self.appended = {}
         self.file_name = file_name
-        if not os.path.isfile(file_name):
+        try:
+            with open(self.file_name) as f:
+                for line in f:
+                    line = line.strip("\n")
+                    if "=" in line:
+                        title, pn = line.split("=")
+                        notation, le = pn.split(",")
+                        self.cache[title.strip()] = (notation.strip(), le.strip())
+        except FileNotFoundError:
             # Create it
             with open(file_name, "w"):
                 print("Creating new method cache")
 
     def __enter__(self):
-        with open(self.file_name) as f:
-            for line in f:
-                line = line.strip("\n")
-                if "=" in line:
-                    title, pn = line.split("=")
-                    notation, le = pn.split(",")
-                    self.cache[title.strip()] = (notation.strip(), le.strip())
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        with open(self.file_name, "w") as f:
-            f.write("\n".join(("{title} = {notation}, {le}".format(title=title, notation=notation, le=le)
-                               for title, (notation, le) in self.cache.items())))
+        if self.appended:
+            with open(self.file_name, "a") as f:
+                f.write("".join(("\n{title} = {notation}, {le}".format(title=title, notation=notation, le=le)
+                                   for title, (notation, le) in self.appended.items())))
+            self.appended = {}
 
     def get(self, method_title):
         # Set title case
@@ -57,11 +61,14 @@ class MethodCache:
             else:
                 raise MethodImportError(method_title)
             self.cache[method_title] = (notation, le)
+            self.appended[method_title] = (notation, le)
             return notation, le
 
+method_cache = MethodCache()
 
-with MethodCache() as cache:
-    def get_method(method_title, short=""):
+
+def get_method(method_title, short=""):
+    with method_cache as cache:
         notation = ""
         le = ""
         if method_title.lower().startswith("stedman"):
