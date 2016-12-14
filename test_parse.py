@@ -27,8 +27,7 @@ class TestParse(TestCase):
     def test_string_parsing(self):
         line = "\"Test\""
         assignments_dict = self.new_assignments_dict
-        out_line, assignments_dict\
-            = string_parsing(line, assignments_dict)
+        out_line, assignments_dict= string_parsing(line, assignments_dict)
         self.assertNotIn(line, assignments_dict)
         self.assertNotIn("\"", out_line)
         self.assertIn(out_line, assignments_dict)

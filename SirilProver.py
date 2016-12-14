@@ -15,9 +15,8 @@ def prove(in_assignments_dict, in_statements):
     logger.info(statements)
     try:
         stage = int(statements["bells"])
-    except ValueError:
-        raise SirilError("Number of bells undefined")
-    except TypeError:
+    except (ValueError, TypeError):
+        logger.debug("statements[\"bells\"] = {}".format(str(statements["bells"])))
         raise SirilError("Number of bells undefined")
     rounds = statements["rounds"]
     if rounds is None:
@@ -65,6 +64,7 @@ def prove(in_assignments_dict, in_statements):
 
 
 def process(comp, var, assignments_dict):
+    from SirilParser import key_manager
     if callable(assignments_dict[var]):
         arguments, comp, assignments_dict = assignments_dict[var](comp, assignments_dict)
         if arguments:
@@ -87,12 +87,14 @@ def process(comp, var, assignments_dict):
             elif arg.startswith("\""):
                 print_string(comp, arg, assignments_dict, var)
             else:
-                raise SirilError("Unknown assignment: {}".format(arg))
+                logger.debug("arg = {}".format(str(arg)))
+                raise SirilError("Unknown assignment: {}".format(key_manager.get_original(arg)))
     return comp, assignments_dict
 
 
 def print_string(comp, arg, assignments_dict, var):
     """Prints given argument string to assignments_dict["`@output@`"] or sys.stdout after formatting special char"""
+    from SirilParser import key_manager
     if arg.endswith("\\\""):
         end = ""
         output = arg[1:-2]
@@ -100,7 +102,7 @@ def print_string(comp, arg, assignments_dict, var):
         end = "\n"
         output = arg[1:-1]
     else:
-        raise SirilError("String not closed: {}".format(arg))
+        raise SirilError("String not closed: {}".format(key_manager.get_original(arg)))
     for single_use in re.findall(r"(@(\[[0-9\-]*:[0-9\-]*:?[0-9\-]*\])+)", output):
         output = output.replace(single_use[0], comp.current_row.format(single_use[0]))
     output = output.replace("@", comp.current_row.format(assignments_dict["@"][0]))

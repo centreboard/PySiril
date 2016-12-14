@@ -10,6 +10,7 @@ from MethodImport import get_method, stages
 
 logger = logging.getLogger(__name__)
 
+
 class KeyManager:
     def __init__(self):
         self.index = 1
@@ -47,12 +48,12 @@ def string_parsing(line, assignments_dict):
     while "\"" in line:
         left, _, right = line.partition("\"")
         if "\"" not in right:
-            raise SirilError("String not closed: {}".format(line))
+            raise SirilError("String not closed: {}".format(key_manager.get_original(line)))
         else:
             string, _, right = right.partition("\"")
         # Check further statements on line are after a comma or semicolon or bracket
         if right.strip() and right.strip()[0] not in [",", ";", ")", "}"]:
-            raise SirilError("No comma or semicolon between statements: {}".format(right))
+            raise SirilError("No comma or semicolon between statements: {}".format(key_manager.get_original(right)))
         # key = "`@{}@`".format(str(index))
         # index += 1
         key = key_manager.get_key("\"{}\"".format(string))
@@ -77,11 +78,10 @@ def bracket_parsing(line, assignments_dict, stage):
                 # key = "`@{}@`".format(str(index))
                 # index += 1
                 if bracket_close == ")":
-                    arguments, assignments_dict = argument_parsing(line[i_open + 1: i_close], assignments_dict,
-                                                                          stage)
+                    arguments, assignments_dict = argument_parsing(line[i_open + 1: i_close], assignments_dict, stage)
                 else:
-                    arguments, assignments_dict = alternatives_parsing(line[i_open + 1: i_close],
-                                                                              assignments_dict, stage)
+                    arguments, assignments_dict = alternatives_parsing(line[i_open + 1: i_close], assignments_dict,
+                                                                       stage)
                 # Include brackets in the original
                 key = key_manager.get_key(line[i_open: i_close + 1])
                 assignments_dict[key] = arguments
@@ -128,7 +128,7 @@ def argument_parsing(line, assignments_dict, stage):
                 if not char.isdigit():
                     break
             else:
-                raise SirilError("Argument is all digits: {}".format(arg))
+                raise SirilError("Argument is all digits: {}".format(key_manager.get_original(arg)))
             n = int(arg[:j])
             arg = re.sub(r"\s*\*\s*", "", arg[j:]).strip()
             # TODO: if arg not in assignments_dict
@@ -145,7 +145,7 @@ def argument_parsing(line, assignments_dict, stage):
             out.append("`@break@`")
         elif arg[0] == "@":
             if len(arguments) > 1:
-                raise SirilError("Can't assign test ({}) with other statements".format(arg))
+                raise SirilError("Can't assign test ({}) with other statements".format(key_manager.get_original(arg)))
             else:
                 out = get_match(arg[1:])
         else:
@@ -194,16 +194,16 @@ def alternatives_parsing(line, assignments_dict, stage):
         arguments, assignments_dict = argument_parsing(arguments, assignments_dict, stage)
         test_list.append((test, arguments))
 
-    def check(comp, assignments_dict):
+    def check(comp, check_assignments_dict):
         row = comp.current_row
-        for test, arguments in test_list:
-            if test in assignments_dict:
-                test = assignments_dict[test]
-            if not test or row.matches(test):
+        for check_test, check_arguments in test_list:
+            if check_test in check_assignments_dict:
+                check_test = check_assignments_dict[check_test]
+            if not check_test or row.matches(check_test):
                 break
         else:
-            arguments = ()
-        return arguments, comp, assignments_dict
+            check_arguments = ()
+        return check_arguments, comp, check_assignments_dict
 
     return check, assignments_dict
 
@@ -211,18 +211,18 @@ def alternatives_parsing(line, assignments_dict, stage):
 def repeat_parser(line, assignments_dict, stage):
     arguments, assignments_dict = argument_parsing(line, assignments_dict, stage)
 
-    def repeat(comp, assignments_dict):
+    def repeat(comp, inner_assignments_dict):
         try:
-            assignments_dict["`@repeat@`"] = arguments
+            inner_assignments_dict["`@repeat@`"] = arguments
             n = 0
             while True:
                 n += 1
                 if n > 100000:
                     raise SirilError("Recursion Error in repeat loop")
-                comp, assignments_dict = SirilProver.process(comp, "`@repeat@`", assignments_dict)
+                comp, inner_assignments_dict = SirilProver.process(comp, "`@repeat@`", inner_assignments_dict)
 
         except StopRepeat:
-            return [], comp, assignments_dict
+            return [], comp, inner_assignments_dict
 
     return repeat
 
@@ -250,8 +250,8 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ass
             # Assignment
             if statements["bells"] is None:
                 raise SirilError("Number of bells must be defined before assignment")
-            assignments_dict, statements = variable_assignment(line, assignments_dict, case_sensitive,
-                                                                      statements, assign_prove)
+            assignments_dict, statements = variable_assignment(line, assignments_dict, case_sensitive, statements,
+                                                               assign_prove)
         else:
             # Statement
             match = re.match(r"([0-9]+)\s+(extents|bells)", line.lower())
@@ -265,8 +265,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ass
                     statements[match.group(2)] = int(match.group(1))
             elif line.lower().startswith("import "):
                 file_name = "{}.siril".format(line[7:]) if "." not in line else line[7:]
-                assignments_dict, statements = import_siril(file_name, case_sensitive, assignments_dict,
-                                                                   statements)
+                assignments_dict, statements = import_siril(file_name, case_sensitive, assignments_dict, statements)
             elif line.lower().startswith("rounds "):
                 statements["rounds"] = Row(line[7:].strip())
                 if statements["bells"] is not None:
@@ -278,14 +277,14 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ass
                 # To cope with assignment in the prove statement
                 statements["prove"] = "`@prove@`"
                 assignments_dict["`@prove@`"], assignments_dict = full_parse(line[6:].strip(), assignments_dict,
-                                                                                    statements["bells"])
+                                                                             statements["bells"])
             elif statements["bells"] is not None and line.lower().startswith("method "):
                 method_siril = import_method(line, statements)
                 assignments_dict, statements = parse(method_siril, case_sensitive, assignments_dict, statements, False)
             elif statements["bells"] is not None and line.title() == "Calling Positions":
                 tenor = STAGE_DICT_INT_TO_STR[statements["bells"]]
-                assignments_dict, statements = parse(calling_position_siril(tenor), case_sensitive,
-                                                            assignments_dict, statements, False)
+                assignments_dict, statements = parse(calling_position_siril(tenor), case_sensitive, assignments_dict,
+                                                     statements, False)
             else:
                 if "`@output@`" in assignments_dict:
                     print("Statement has no effect:", line, file=assignments_dict["`@output@`"])
@@ -323,8 +322,7 @@ def import_siril(file_name, case_sensitive, assignments_dict, statements):
             break
     try:
         with open(import_name) as f:
-            assignments_dict, statements = parse(f.read(), case_sensitive, assignments_dict,
-                                                        statements, False)
+            assignments_dict, statements = parse(f.read(), case_sensitive, assignments_dict, statements, False)
     except FileNotFoundError:
         raise ImportFileNotFound(file_name)
     return assignments_dict, statements

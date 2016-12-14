@@ -1,9 +1,11 @@
-import os
 import requests
+import logging
 import xml.etree.cElementTree as ElementTree
 from textwrap import dedent
 from Exceptions import MethodImportError
 from CompositionClasses import STAGE_DICT_INT_TO_STR
+
+logger = logging.getLogger(__name__)
 
 stages = {4: "minimus", 5: "doubles", 6: "minor", 7: "triples", 8: "major", 9: "caters", 10: "royal", 11: "cinques",
           12: "maximus", 13: "thirteen", 14: "fourteen", 15: "fifteen", 16: "sixteen"}
@@ -25,7 +27,7 @@ class MethodCache:
         except FileNotFoundError:
             # Create it
             with open(file_name, "w"):
-                print("Creating new method cache")
+                logger.info("Creating new method cache")
 
     def __enter__(self):
         return self
@@ -34,7 +36,7 @@ class MethodCache:
         if self.appended:
             with open(self.file_name, "a") as f:
                 f.write("".join(("\n{title} = {notation}, {le}".format(title=title, notation=notation, le=le)
-                                   for title, (notation, le) in self.appended.items())))
+                        for title, (notation, le) in self.appended.items())))
             self.appended = {}
 
     def get(self, method_title):
@@ -101,7 +103,7 @@ def get_method(method_title, short=""):
             short = method_title[:2]
         return dedent("""
                 lh =
-                finish = lh, (lh = ), finish //means lh affects exactly once at finish for any number of methods imported
+                finish = lh, (lh = ), finish //means lh affects exactly once at finish
                 method = lh, {short}_pn, {short}_lh
                 print_p =
                 print_b = "- @"

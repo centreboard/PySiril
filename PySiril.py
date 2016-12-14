@@ -12,8 +12,7 @@ __version__ = "0.1.1"
 def try_parse(siril, case_sensitive, assignments_dict, statements, line_n, assign_prove, raise_error=False):
     assignments_dict_cache, statements_cache = assignments_dict.copy(), statements.copy()
     try:
-        assignments_dict, statements = parse(siril, case_sensitive, assignments_dict, statements,
-                                                    assign_prove)
+        assignments_dict, statements = parse(siril, case_sensitive, assignments_dict, statements, assign_prove)
     except SirilError as e:
         print("Line:", line_n, "SirilError:", e, file=assignments_dict["`@output@`"])
         if raise_error:
@@ -73,7 +72,7 @@ def main():
             "Please set number of bells with -B=BELLS (or implicitly with -r=ROUNDS) before using -b, -s or -M")
     if args.bob is not None:
         line = " ".join(("bob =", args.bob))
-        assignments_dict, statements, success = try_parse(line, args.case, assignments_dict, statements, 0,False,
+        assignments_dict, statements, success = try_parse(line, args.case, assignments_dict, statements, 0, False,
                                                           raise_error)
     if args.single is not None:
         line = " ".join(("single =", args.single))
@@ -96,7 +95,7 @@ def main():
             file = DummyFile()
             t_assignment["`@output@`"] = file
             t_assignment, t_statement, success_parse = try_parse(line, args.case, t_assignment, t_statement, 0, True,
-                                                                    raise_error=False)
+                                                                 raise_error=False)
             if success_parse:
                 t_statement, success = try_prove(t_assignment, t_statement, 0, raise_error=False)
                 if success:
@@ -115,8 +114,8 @@ def main():
         else:
             stored_line = ""
 
-        assignments_dict, statements, success = try_parse(line, args.case, assignments_dict, statements,
-                                                                 n, True, raise_error)
+        assignments_dict, statements, success = try_parse(line, args.case, assignments_dict, statements, n, True,
+                                                          raise_error)
         if statements["bells"]:
             if import_calling_position:
                 line = "Calling Positions"
@@ -137,8 +136,8 @@ def main():
                     pass
                 else:
                     print("Proving:", args.prove, file=file)
-                    t_assignment, t_statement, success = try_parse(line, args.case, t_assignment, t_statement,
-                                                                      n, True, raise_error=False)
+                    t_assignment, t_statement, success = try_parse(line, args.case, t_assignment, t_statement, n, True,
+                                                                   raise_error=False)
                     if success:
                         try_prove(t_assignment, t_statement, n, raise_error=False)
             if statements["prove"] == "`@prove@`" and (args.infile == sys.stdin or args.prove is None):

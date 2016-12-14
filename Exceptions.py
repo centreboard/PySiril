@@ -1,7 +1,7 @@
 import logging
 
 
-logging.basicConfig(filename='PySiril.log', level=logging.DEBUG, filemode="w")
+logging.basicConfig(filename='PySiril.log', level=logging.INFO, filemode="w")
 logger = logging.getLogger(__name__)
 
 
