@@ -81,7 +81,7 @@ class TestProver(TestCase):
     def test_process(self):
         pass
 
-    def check_final(self, siril, final="true", truth=3, assertion=True):
+    def check_final(self, siril, final="true", truth=3, assertion=True, length=None):
         assignments_dict = self.new_assignments_dict
         comp, comp_truth = prove(*parse(siril, assignments_dict=assignments_dict)[:2])
         # print(str(self.file))
@@ -94,6 +94,8 @@ class TestProver(TestCase):
         else:
             self.assertNotEqual(ending, self.file.read()[-len(ending):])
             self.assertNotEqual(truth, comp_truth)
+        if length is not None:
+            self.assertEqual(length, len(comp))
 
     def test_plain_bob(self):
         for stage in range(6, 17, 2):
@@ -134,7 +136,7 @@ class TestProver(TestCase):
             method Stedman
             post_proof = +3.1, "  @"
             prove St, {x}p, +{pn}.1.3.1""".format(B=stage, x=2 * stage - 1, pn=STAGE_DICT_INT_TO_STR[stage])
-            self.check_final(plain_siril)
+            self.check_final(plain_siril, length=12 * stage)
 
             bob_siril = """
                         {B} bells
@@ -142,7 +144,7 @@ class TestProver(TestCase):
                         post_proof = +3.1, "- @"
                         prove St, {x}b, +{pn}.1.3.1""".format(B=stage, x=2 * (stage - 2) - 1,
                                                               pn=STAGE_DICT_INT_TO_STR[stage - 2])
-            self.check_final(bob_siril)
+            self.check_final(bob_siril, length=12*(stage-2))
 
     def test_conflict(self):
         for stage in range(4, 17):

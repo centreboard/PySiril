@@ -44,8 +44,8 @@ def main():
                         help="Flag whether to import the default calling positions automatically")
     parser.add_argument("-I", "--case", action="store_false", help="Run case insensitively")
     parser.add_argument("-B", "--bells", nargs='?', type=int, help="The number of bells.")
-    parser.add_argument("-n", "--extents", nargs='?', type=int, help="The number of extents. Default=1", default=1)
-    parser.add_argument("-r", "--rounds", nargs='?', type=str, help="The starting 'rounds'")
+    parser.add_argument("-n", "--extents", type=int, help="The number of extents. Default=1", default=1)
+    parser.add_argument("-r", "--rounds", type=str, help="The starting 'rounds'")
     parser.add_argument("-P", "--prove", nargs='?', type=str, help="Proves given symbol", const="`@default@`")
     parser.add_argument("-M", "--method", nargs='?', type=str, help="Generates siril for a given method")
     parser.add_argument("-b", "--bob", nargs='?', type=str, const="+4", help="Place notation for bob for method")
@@ -66,7 +66,9 @@ def main():
     if args.rounds is not None:
         line = " ".join(("rounds", args.rounds))
         assignments_dict, statements, success = try_parse(line, args.case, assignments_dict, statements, 0, False,
-                                                          raise_error)
+                                                          False)
+        if not success:
+            parser.error("Rounds not same length as number of bells")
     if not statements["bells"] and (args.bob or args.single or args.method):
         parser.error(
             "Please set number of bells with -B=BELLS (or implicitly with -r=ROUNDS) before using -b, -s or -M")
@@ -142,7 +144,7 @@ def main():
                         try_prove(t_assignment, t_statement, n, raise_error=False)
             if statements["prove"] == "`@prove@`" and (args.infile == sys.stdin or args.prove is None):
                 statements, success = try_prove(assignments_dict, statements, n, raise_error)
-    # Actually print last attempt at proving args.prove
+    # Actually print last attempt at proving args.prove (which may be empty)
     file.dump(assignments_dict["`@output@`"])
 
 

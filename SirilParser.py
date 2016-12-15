@@ -31,8 +31,6 @@ class KeyManager:
             out = out.replace(key, self.original[key])
         return out
 
-key_manager = KeyManager()
-
 
 def full_parse(line, assignments_dict, stage, case_sensitive=True):
     line, assignments_dict = string_parsing(line, assignments_dict)
@@ -350,17 +348,6 @@ def variable_assignment(line, assignments_dict, case_sensitive, statements, assi
     return assignments_dict, statements
 
 
-default_assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (), "post_proof": (),
-                            "conflict": ("\"# rows ending in @\nTouch not completed due to false row$$\"",),
-                            "true": ("\"# rows ending in @\nTouch is true\"",),
-                            "notround": ("\"# rows ending in @\nIs this OK?\"",),
-                            "false": ("\"# rows ending in @\nTouch is false in $ rows\"",),
-                            "notextent": (
-                                "\"# rows ending in @\nNot all rows appear at least (no. extents - 1) times\"",),
-                            "@": ("[:]",)}
-default_statements = {"extents": None, "bells": None, "rounds": None, "prove": None}
-
-
 def calling_position_siril(tenor):
     return dedent(r"""
     H = repeat(method, {{/*{tenor}?/: b, break; p}})
@@ -372,3 +359,16 @@ def calling_position_siril(tenor):
     sM = repeat(method, {{/*{tenor}???/: s, break; p}})
     B = repeat(method, {{/1{tenor}*/: b, break; p}})
     """.format(tenor=tenor))
+
+
+default_assignments_dict = {"start": (), "finish": (), "rounds": (), "everyrow": (), "abort": (), "post_proof": (),
+                            "conflict": ("\"# rows ending in @\nTouch not completed due to false row$$\"",),
+                            "true": ("\"# rows ending in @\nTouch is true\"",),
+                            "notround": ("\"# rows ending in @\nIs this OK?\"",),
+                            "false": ("\"# rows ending in @\nTouch is false in $ rows\"",),
+                            "notextent": (
+                                "\"# rows ending in @\nNot all rows appear at least (no. extents - 1) times\"",),
+                            "@": ("[:]",)}
+default_statements = {"extents": None, "bells": None, "rounds": None, "prove": None}
+
+key_manager = KeyManager()

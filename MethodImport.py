@@ -115,7 +115,7 @@ def get_method(method_title, short=""):
                 {short}_lh = (p = (lh = {short}_p), {short}_full_lead), (b = (lh = {short}_b), {short}_full_lead),
                              (s = (lh = {short}_s), {short}_full_lead), (lh={short}_p)
                 {short}_full_lead = (p = lh, {short}_pn, (lh = {short}_p)), (b = lh, {short}_pn, (lh = {short}_b)),
-                                    (s = lh, {short}_pn, lh = {short}_s)
+                                    (s = lh, {short}_pn, (lh = {short}_s))
                 // Assign bob and single to desired place notation, e.g. bob = +4; single = +234
                 // For different methods with different bobs add a dynamic assignment to the short method name
                 // E.g for Belfast with 4ths place bobs, Glasgow with 6ths place
