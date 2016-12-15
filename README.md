@@ -1,7 +1,7 @@
 # PySiril
 A python implementation of siril
 
-run as python PySiril.py [-h] [-c] [-I] [-B [BELLS]] [-n [EXTENTS]] [-r [ROUNDS]]
+run as python PySiril.py [-h] [-c] [-I] [-B [BELLS]] [-n EXTENTS] [-r ROUNDS]
                   [-P [PROVE]] [-M [METHOD]] [-b [BOB]] [-s [SINGLE]]
                   [infile] [outfile]
                   
@@ -11,7 +11,7 @@ MicroSiril is a language for proving compositions for Change Ringing, which was 
 
 Broadly speaking siril is a series of assignments that eventually resolve as either place notation that advances the composition or a string that is printed. For documentation on Gsiril see http://www.ex-parrot.com/~richard/gsiril/
 
-PySiril also includes new builtin "notextent" which is executed when (for a n extents) a composition:
+PySiril also includes new builtin "notextent" which is executed when (for n extents) a composition:
 a) has no row repeated more then n times (else "conflict" and maybe "false" are executed)
 b) ends in rounds ("notround")
 c) some rows appear fewer than n-1 times (else "true") 
@@ -32,7 +32,7 @@ The current implementation is where method can be assigned by the method stateme
     sM = repeat(method, {{/*<tenor>???/: s, break; p})
     B = repeat(method, {/1<tenor>*/: b, break; p})
 
-### method `<Method Title>` [`"<short>"`] (or the optional argument -M `<Method Title>`)
+### method `<Method Title> ["<short>"]` (or the optional argument -M `<Method Title>`)
 
 This looks up the given `<Method Title>`, adding the stage name based on the number of bells if it is omitted from the title, and generates pysiril code based either on the given `<short>` name or the first two letters of the title if no short form is given.
 It attempts to read from a MethodCache.siril file in the current folder, and if the file doesn't exist or the method title isn't present

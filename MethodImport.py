@@ -79,7 +79,9 @@ def get_method(method_title, short=""):
                     if not short:
                         short = "St"
                     return dedent("""
-                        {short} = +3.1, "  @", (p = {short}_p), (b = {short}_b), (s = {short}_s)
+                        {short} = +3.1, "  @", (p = {short}_p), (b = {short}_b), (s = {short}_s),
+                                  (p_end = +{n}.1.3.1, (six=slow)), (b_end = +{n2}.1.3.1, (six=slow)),
+                                  (s_end = +{n2}{n1}{n}.1.3.1, (six=slow))
                         six = slow
                         quick = +1.3.1.3.1, (six = slow)
                         slow =  +3.1.3.1.3, (six = quick)
@@ -116,12 +118,8 @@ def get_method(method_title, short=""):
                              (s = (lh = {short}_s), {short}_full_lead), (lh={short}_p)
                 {short}_full_lead = (p = lh, {short}_pn, (lh = {short}_p)), (b = lh, {short}_pn, (lh = {short}_b)),
                                     (s = lh, {short}_pn, (lh = {short}_s))
-                // Assign bob and single to desired place notation, e.g. bob = +4; single = +234
-                // For different methods with different bobs add a dynamic assignment to the short method name
-                // E.g for Belfast with 4ths place bobs, Glasgow with 6ths place
-                // method Belfast Surprise "F"; method Glasgow Surprise "G";
-                // F = F, (bob = +4); G = G, (bob = +6);
-                // prove F, b, G, b
+                // To use these assign bob and single to desired place notation, e.g. bob = +4; single = +234
+            // If you just need a lead of place notation reassign <short> = <short>_pn and define p, b, s to preference
                 {short}_p = {le}, print_p
                 {short}_b = bob, print_b
                 {short}_s = single, print_s

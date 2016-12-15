@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import sys
 import argparse
-from SirilParser import parse, default_assignments_dict, default_statements
+from SirilParser import parse, default_assignments_dict, default_statements, key_manager
 from SirilProver import prove
 from Exceptions import SirilError
 from DummyFile import DummyFile
 from Music import music
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 
 def try_parse(siril, case_sensitive, assignments_dict, statements, line_n, assign_prove, raise_error=False):
@@ -134,7 +134,9 @@ def main():
                 t_assignment["`@output@`"] = file
                 if args.prove == "`@default@`":
                     if statements["prove"] is not None:
-                        print("Proving:", statements["prove"], file=file)
+                        print_prove = statements["prove"] if statements["prove"] != "`@prove@`" else \
+                            key_manager.get_original(",".join(assignments_dict["`@prove@`"]))
+                        print("Proving:", print_prove, file=file)
                         try_prove(t_assignment, t_statement, n, raise_error=False)
                 elif args.prove == "`@printed@`":
                     pass

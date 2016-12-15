@@ -11,8 +11,8 @@ def prove(in_assignments_dict, in_statements):
     # Copy to prevent proof affecting assignments elsewhere
     assignments_dict, statements = in_assignments_dict.copy(), in_statements.copy()
     logger.info("New proof")
-    logger.info(assignments_dict)
-    logger.info(statements)
+    logger.debug(assignments_dict)
+    logger.debug(statements)
     try:
         stage = int(statements["bells"])
     except (ValueError, TypeError):
@@ -103,8 +103,10 @@ def print_string(comp, arg, assignments_dict, var):
         output = arg[1:-1]
     else:
         raise SirilError("String not closed: {}".format(key_manager.get_original(arg)))
-    for single_use in re.findall(r"(@(\[[0-9\-]*:[0-9\-]*:?[0-9\-]*\])+)", output):
-        output = output.replace(single_use[0], comp.current_row.format(single_use[0]))
+    # Printing row with override default format i.e. @[start:stop:step]
+    for row_with_format in re.findall(r"(@(\[[0-9\-]*:[0-9\-]*:?[0-9\-]*\])+)", output):
+        output = output.replace(row_with_format[0], comp.current_row.format(row_with_format[0]))
+    # And now those using default
     output = output.replace("@", comp.current_row.format(assignments_dict["@"][0]))
     output = output.replace("#", str(len(comp))).replace("\\n", "\n")
     if "$$" in output:

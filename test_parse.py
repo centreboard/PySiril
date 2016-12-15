@@ -27,7 +27,7 @@ class TestParse(TestCase):
     def test_string_parsing(self):
         line = "\"Test\""
         assignments_dict = self.new_assignments_dict
-        out_line, assignments_dict= string_parsing(line, assignments_dict)
+        out_line, assignments_dict = string_parsing(line, assignments_dict)
         self.assertNotIn(line, assignments_dict)
         self.assertNotIn("\"", out_line)
         self.assertIn(out_line, assignments_dict)
@@ -67,11 +67,3 @@ class TestFunction(TestCase):
         self.assertEqual("Should be a comp".upper(), return_assignments_dict["recall"])
         _, _, return_assignments_dict = assign_callable("Take 2", self.new_assignments_dict)
         self.assertEqual("Take 2".upper(), return_assignments_dict["recall"])
-
-
-
-
-
-
-
-

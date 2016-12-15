@@ -24,6 +24,7 @@ class TestProver(TestCase):
     def new_assignments_dict(self):
         return self.default_assignments_dict.copy()
 
+    # noinspection PyPep8Naming
     def assertRaisesSiril(self, callableObj=None, *args, **kwargs):
         self.assertRaises(SirilError, callableObj, *args, **kwargs)
 

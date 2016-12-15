@@ -3,7 +3,7 @@ import re
 from textwrap import dedent
 import logging
 import SirilProver
-from CompositionClasses import PlaceNotationPerm, Row, STAGE_DICT_INT_TO_STR
+from CompositionClasses import PlaceNotationPerm, Row, STAGE_DICT_INT_TO_STR, Composition
 from Exceptions import SirilError, StopRepeat, ImportFileNotFound
 from MethodImport import get_method, stages
 
@@ -36,6 +36,7 @@ def full_parse(line, assignments_dict, stage, case_sensitive=True):
     line, assignments_dict = string_parsing(line, assignments_dict)
     if not case_sensitive:
         line = line.lower()
+    line, assignments_dict = external_parsing(line, assignments_dict, stage)
     line, assignments_dict = bracket_parsing(line, assignments_dict, stage)
     out, assignments_dict = argument_parsing(line, assignments_dict, stage)
     return out, assignments_dict
@@ -50,7 +51,7 @@ def string_parsing(line, assignments_dict):
         else:
             string, _, right = right.partition("\"")
         # Check further statements on line are after a comma or semicolon or bracket
-        if right.strip() and right.strip()[0] not in [",", ";", ")", "}"]:
+        if right.strip() and right.strip()[0] not in [",", ";", ")", "}"] and right.strip()[:2] != "!)":
             raise SirilError("No comma or semicolon between statements: {}".format(key_manager.get_original(right)))
         # key = "`@{}@`".format(str(index))
         # index += 1
@@ -60,9 +61,34 @@ def string_parsing(line, assignments_dict):
     return line, assignments_dict
 
 
+def external_parsing(line, assignments_dict, stage):
+    while "(!" in line:
+        i_open = None
+        bracket_close = ""
+        for i, char in enumerate(line):
+            # Protect from indexing errors when accessing line[i+-1] It will fall through to else.
+            if char == "(" and len(line) > i and line[i+1] == "!":
+                bracket_close = ")"
+                i_open = i
+            elif char == bracket_close and i and line[i-1] == "!":
+                if i_open is None:
+                    raise SirilError("!) before (!: {}".format(key_manager.get_original(line)))
+                i_close = i
+                arguments, assignments_dict = external_parser(line[i_open + 2: i_close - 1], assignments_dict, stage)
+                # Include brackets in the original
+                key = key_manager.get_key(line[i_open: i_close + 1])
+                assignments_dict[key] = arguments
+                line = line[:i_open] + key + line[i_close + 1:]
+                break
+        else:
+            raise SirilError("Unmatched external parsing brackets (! !): {}".format(key_manager.get_original(line)))
+    return line, assignments_dict
+
+
 def bracket_parsing(line, assignments_dict, stage):
+    # Works from inner pair towards outer pairs
     while "(" in line or "{" in line:
-        i_open = 0
+        i_open = None
         bracket_close = ""
         for i, char in enumerate(line):
             if char == "(":
@@ -73,8 +99,6 @@ def bracket_parsing(line, assignments_dict, stage):
                 i_open = i
             elif char == bracket_close:
                 i_close = i
-                # key = "`@{}@`".format(str(index))
-                # index += 1
                 if bracket_close == ")":
                     arguments, assignments_dict = argument_parsing(line[i_open + 1: i_close], assignments_dict, stage)
                 else:
@@ -86,7 +110,9 @@ def bracket_parsing(line, assignments_dict, stage):
                 line = line[:i_open] + key + line[i_close + 1:]
                 break
         else:
-            raise SirilError("Unmatched brackets")
+            raise SirilError("Unmatched brackets: {}".format(key_manager.get_original(line)))
+    if ")" in line or "}" in line:
+        raise SirilError("Unmatched brackets: {}".format(key_manager.get_original(line)))
     return line, assignments_dict
 
 
@@ -137,7 +163,7 @@ def argument_parsing(line, assignments_dict, stage):
             # key = "`@{}@`".format(str(index))
             # index += 1
             key = key_manager.get_key(arg)
-            assignments_dict[key] = repeat_parser(arg[6:], assignments_dict, stage)
+            assignments_dict[key], assignments_dict = repeat_parser(arg[6:], assignments_dict, stage)
             out.append(key)
         elif arg == "break":
             out.append("`@break@`")
@@ -222,7 +248,23 @@ def repeat_parser(line, assignments_dict, stage):
         except StopRepeat:
             return [], comp, inner_assignments_dict
 
-    return repeat
+    return repeat, assignments_dict
+
+
+def external_parser(line, assignments_dict, stage):
+    # Don't need case sensitive. If it is it will already be lowered.
+    # Full parse should fall straight through string and external as already dealt with but catches any other
+    # brackets in the line
+    arguments, assignments_dict = full_parse(line, assignments_dict, stage)
+
+    def external(comp, inner_assignments_dict):
+        # Use a copy for external use and return the original comp untouched
+        inner_assignments_dict["`@external@`"] = arguments
+        ext_comp = Composition(comp.current_row, comp.stage, comp.extents)
+        ext_comp, inner_assignments_dict = SirilProver.process(ext_comp, "`@external@`", inner_assignments_dict)
+        return [], comp, inner_assignments_dict
+
+    return external, assignments_dict
 
 
 def parse(text, case_sensitive=True, assignments_dict=None, statements=None, assign_prove=True):
@@ -244,7 +286,7 @@ def parse(text, case_sensitive=True, assignments_dict=None, statements=None, ass
         line = line.strip()
         if not line:
             continue
-        if "=" in line:
+        if ("=" in line and not line.startswith("prove ")) or line.startswith("prove ="):
             # Assignment
             if statements["bells"] is None:
                 raise SirilError("Number of bells must be defined before assignment")

@@ -100,18 +100,22 @@ class Matcher:
             tests = self.cache[test_string]
         else:
             tests = [test_string]
+            # [12] is 1 or 2 in this place
             while any("[" in t for t in tests):
                 new_tests = []
                 for t in tests:
                     if "[" in t:
+                        # Get a sting of bells from within brackets. Note bells are 1 char, alphanumeric.
                         bells = re.search(r"\[([^\]]*)\]", t).group(1)
-                        # print(bells)
+                        # Iterate bell by bell
                         for bell in bells:
                             new_tests.append(re.sub(r"\[[^\]]*\]", bell, t))
-                            # print(new_tests)
                 tests = new_tests
 
-            # tests = [test_string]
+            # * is an arbitary number. Instance by instance fill the string with possible amounts then prune those
+            # still too short
+            # i.e. for 4 bell *2* becomes:
+            # 2*, ?2*, ??2* then 2, 2?, 2??, 2???, ?2, ?2?, ?2?? etc.
             n = test_string.count("*")
             for i in range(n):
                 new_tests = []
@@ -121,6 +125,7 @@ class Matcher:
                 tests = new_tests
             tests = [t for t in tests if len(t) == stage]
             self.cache[test_string] = tests
+        # And test if matches
         for t in tests:
             for i, bell in enumerate(t):
                 if bell != "?" and bell != row_string[i]:
@@ -132,7 +137,9 @@ class Matcher:
 
 
 class Row(tuple):
+    # Single Matcher instance for all rows
     matcher = Matcher()
+    #[Start:Stop:Step] where :step is optional, as are start and stop values
     slice_re = re.compile(r"\[([0-9\-]*:[0-9\-]*:?[0-9\-]*)\]")
 
     def __init__(self, seq):
@@ -187,6 +194,11 @@ class Row(tuple):
 
 class Permutation(tuple):
     def __new__(cls, place_notation, stage):
+        # Integrity check
+        for place in place_notation:
+            if place > stage:
+                raise SirilError("Place notation greater than current number bells: {}".format(
+                    STAGE_DICT_INT_TO_STR[place]))
         sequence = list(range(stage))
         i = 1 if place_notation[0] % 2 else 2
         while i < stage:
@@ -218,7 +230,10 @@ class PlaceNotationPerm(tuple):
             raise Exception("Place notation must start with & or +")
         temp = place_notation[1:].replace("x", "-").replace("-", ".-.").replace("..", ".").strip(".").split(".")
         # using -1 for cross as it needs to be odd and not a valid bell
-        place_notation_list = [[-1 if i == "-" else STAGE_DICT_STR_TO_INT[i] for i in place] for place in temp]
+        try:
+            place_notation_list = [[-1 if i == "-" else STAGE_DICT_STR_TO_INT[i] for i in place] for place in temp]
+        except KeyError:
+            raise SirilError("Invalid place notation: {}".format(place_notation))
         if symmetric:
             place_notation_list += place_notation_list[-2::-1]
         return super().__new__(cls, (Permutation(place, stage) for place in place_notation_list))
@@ -228,6 +243,6 @@ if __name__ == '__main__':
     p_n = "&-3-4-2-3-4-5"
     test_row = Row(range(1, 7))
     print(test_row)
-    for perm in PlaceNotationPerm(p_n, 6):
-        test_row = test_row(perm)
-        print(test_row, perm, test_row.matches("*5?6*"))
+    for test_perm in PlaceNotationPerm(p_n, 6):
+        test_row = test_row(test_perm)
+        print(test_row, test_perm, test_row.matches("*5?6*"))
