@@ -83,6 +83,10 @@ class Composition:
     def __len__(self):
         return len(self.rows)
 
+    def __iter__(self):
+        for row in self.rows:
+            yield row
+
 
 class Matcher:
     def __init__(self):

@@ -5,7 +5,7 @@ run as python PySiril.py [-h] [-c] [-I] [-B [BELLS]] [-n [EXTENTS]] [-r [ROUNDS]
                   [-P [PROVE]] [-M [METHOD]] [-b [BOB]] [-s [SINGLE]]
                   [infile] [outfile]
                   
-Where -h brings up help. Infile and outfile specify files to read siril from and output the results to. They default to stdin and stdout respectively and get be explicitly set to be so by using -
+Where -h brings up help. Infile and outfile specify files to read siril from and output the results to. They default to stdin and stdout respectively and can be explicitly set to be so by using -
 
 MicroSiril is a language for proving compositions for Change Ringing, which was expanded upon by Gsiril. This project is an implementation written in Python that extends Gsiril constructs of pattern matching, dynamic assignment and repeat blocks to include dynamic patttern matching (based on storing specified parts of current row,) formatting the current row output (e.g. omit printing the treble) and extended assignment, where a variable assigns to itself (e.g. currrent_line = current_line, "- \" for a storing a set of string to be printed later. These concepts can be seen in the "SAB 5129 Grandsire Cater.siril" file.
 
@@ -18,8 +18,7 @@ c) some rows appear fewer than n-1 times (else "true")
 
 There are also additional statements/optional arguments:
 
-### Calling Positions
-### or the flag -c
+### Calling Positions (or the flag -c)
 
 This executes siril for the standard calling positions Home (H), Wrong (W), Middle (M) and Before based on the position of the tenor. It is likely to only work for standard use case of lead end placenotation being length 1 and middle not being making an n-2 bob.
 The current implementation is where method can be assigned by the method statement or just set it to the place notation for the lead with p, b and s being the lead end place notation.
@@ -33,10 +32,12 @@ The current implementation is where method can be assigned by the method stateme
     sM = repeat(method, {{/*<tenor>???/: s, break; p})
     B = repeat(method, {/1<tenor>*/: b, break; p})
 
-### method <Method Title> ["<short>"]
-### or the optional argument -M <Method Title> to the command line
+### method `<Method Title>` [`"<short>"`] (or the optional argument -M `<Method Title>`)
 
-This looks up the given <method title>, adding the stage name based on the number of bells if it is omitted from the title, and generates pysiril code based either on the given <short> name or the first two letters of the title if no short form is given. Specifically the siril is of the form (substituting <short>, <notation> and <le>:
+This looks up the given `<Method Title>`, adding the stage name based on the number of bells if it is omitted from the title, and generates pysiril code based either on the given `<short>` name or the first two letters of the title if no short form is given.
+It attempts to read from a MethodCache.siril file in the current folder, and if the file doesn't exist or the method title isn't present
+it loads from online.
+Specifically the siril is of the form (substituting `<short>`, `<notation>` and `<le>`:
 
     lh =
     finish = lh, (lh = ), finish //means lh affects exactly once at finish
@@ -57,7 +58,7 @@ This looks up the given <method title>, adding the stage name based on the numbe
     <short>_s = single, print_s
                 
 
-Assign bob and single to desired place notation, e.g. bob = +4; single = +234 or by running with the -b and -s flags sets them to these defaults if no place notation is specified after (i.e. -b+6 will use a 6ths place bob)
+Assign bob and single to desired place notation, e.g. `bob = +4; single = +234` or by running with the -b and -s flags sets them to these defaults if no place notation is specified after (i.e. -b+6 will use a 6ths place bob)
 
 The result of this siril is that after calling `6 bells; method Plain Bob "PB"; bob=+4;` you can run
 
