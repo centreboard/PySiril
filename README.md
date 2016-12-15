@@ -4,6 +4,7 @@ A python implementation of siril
 run as python PySiril.py [-h] [-c] [-I] [-B [BELLS]] [-n [EXTENTS]] [-r [ROUNDS]]
                   [-P [PROVE]] [-M [METHOD]] [-b [BOB]] [-s [SINGLE]]
                   [infile] [outfile]
+                  
 Where -h brings up help. Infile and outfile specify files to read siril from and output the results to. They default to stdin and stdout respectively and get be explicitly set to be so by using -
 
 MicroSiril is a language for proving compositions for Change Ringing, which was expanded upon by Gsiril. This project is an implementation written in Python that extends Gsiril constructs of pattern matching, dynamic assignment and repeat blocks to include dynamic patttern matching (based on storing specified parts of current row,) formatting the current row output (e.g. omit printing the treble) and extended assignment, where a variable assigns to itself (e.g. currrent_line = current_line, "- \" for a storing a set of string to be printed later. These concepts can be seen in the "SAB 5129 Grandsire Cater.siril" file.
@@ -36,6 +37,7 @@ method <Method Title> ["<short>"]
 or the optional argument -M <Method Title> to the command line
 
 This looks up the given <method title>, adding the stage name based on the number of bells if it is omitted from the title, and generates pysiril code based either on the given <short> name or the first two letters of the title if no short form is given. Specifically the siril is of the form (substituting {short}, {notation} and {le}:
+
     lh =
     finish = lh, (lh = ), finish //means lh affects exactly once at finish
     method = lh, {short}_pn, {short}_lh
@@ -58,6 +60,7 @@ This looks up the given <method title>, adding the stage name based on the numbe
 Assign bob and single to desired place notation, e.g. bob = +4; single = +234 or by running with the -b and -s flags sets them to these defaults if no place notation is specified after (i.e. -b+6 will use a 6ths place bob)
 
 The result of this siril is that after calling 6 bells; method Plain Bob "PB"; bob=+4; you can run
+
     prove 2(PB, b, 3(PB, p), PB, b)
     prove 2(PB, b, 3(method, p), method, b)    
     prove 2(PB, b, 3(PB), PB, b)
@@ -68,12 +71,14 @@ for the same result. I.e. after the first call to a method p, b and single all w
 
 To change the output reassign print_p, print_b and print_s after the call to method.
 To print the current method each lead reassign
+
     {short}_p = {short}_p, print_method
     {short}_b = {short}_b, print_method
     {short}_s = {short}_s, print_method
 
 For different methods with different bobs add a dynamic assignment to the short method name
 E.g for Belfast with 4ths place bobs, Glasgow with 6ths place
+
     8 bells
     method Belfast Surprise "F" 
     method Glasgow Surprise "G"
