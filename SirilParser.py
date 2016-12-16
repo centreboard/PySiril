@@ -62,17 +62,17 @@ def string_parsing(line, assignments_dict):
 
 
 def external_parsing(line, assignments_dict, stage):
-    while "(!" in line:
+    while "[!" in line:
         i_open = None
         bracket_close = ""
         for i, char in enumerate(line):
             # Protect from indexing errors when accessing line[i+-1] It will fall through to else.
-            if char == "(" and len(line) > i and line[i+1] == "!":
-                bracket_close = ")"
+            if char == "[" and len(line) > i and line[i+1] == "!":
+                bracket_close = "]"
                 i_open = i
             elif char == bracket_close and i and line[i-1] == "!":
                 if i_open is None:
-                    raise SirilError("!) before (!: {}".format(key_manager.get_original(line)))
+                    raise SirilError("!] before [!: {}".format(key_manager.get_original(line)))
                 i_close = i
                 arguments, assignments_dict = external_parser(line[i_open + 2: i_close - 1], assignments_dict, stage)
                 # Include brackets in the original
@@ -81,7 +81,9 @@ def external_parsing(line, assignments_dict, stage):
                 line = line[:i_open] + key + line[i_close + 1:]
                 break
         else:
-            raise SirilError("Unmatched external parsing brackets (! !): {}".format(key_manager.get_original(line)))
+            raise SirilError("Unmatched external parsing brackets [! !]: {}".format(key_manager.get_original(line)))
+    if "!]" in line:
+        raise SirilError("Unmatched external parsing brackets [! !]: {}".format(key_manager.get_original(line)))
     return line, assignments_dict
 
 

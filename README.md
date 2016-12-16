@@ -24,7 +24,10 @@ composition or a string that is printed. For documentation on Gsiril see http://
 PySiril also includes new builtin "notextent" which is executed when (for n extents) a composition:
 1. has no row repeated more then n times (else "conflict" and maybe "false" are executed)
 2. ends in rounds ("notround")
-3. some rows appear fewer than n-1 times (else "true") 
+3. some rows appear fewer than n-1 times (else "true")
+ 
+ The other builtin is "post_proof" (default is nothing) which executes after finish is called but before "true"/"false etc.
+ It is an external parsing (see below) but currently without the requirement to use `[! !]` around it.
 
 There are also additional statements/optional arguments:
 
@@ -98,3 +101,11 @@ E.g for Belfast with 4ths place bobs, Glasgow with 6ths place
     F = F, (bob = +4) 
     G = G, (bob = +6)
     prove F, b, G, b
+    
+## External parsing
+Place notation (and other assignments) surrounded by `[! !]` will
+be proved on a new composition object, starting from the current row.
+This means that bracketed courseends can be generated and printed by such a block (the "@" statement within the brackets
+referring to the new composition.) Within the brackets conflict would be called if the composition is false
+ with respect to the new rows generated and "$" will show the number of rows of the new composition object (i.e. `[!"$"!]` would print 0
+ and `[! +-1, "$" !]` would print 2)
