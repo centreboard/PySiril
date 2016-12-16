@@ -51,7 +51,7 @@ def string_parsing(line, assignments_dict):
         else:
             string, _, right = right.partition("\"")
         # Check further statements on line are after a comma or semicolon or bracket
-        if right.strip() and right.strip()[0] not in [",", ";", ")", "}"] and right.strip()[:2] != "!)":
+        if right.strip() and right.strip()[0] not in [",", ";", ")", "}"] and right.strip()[:2] != "!]":
             raise SirilError("No comma or semicolon between statements: {}".format(key_manager.get_original(right)))
         # key = "`@{}@`".format(str(index))
         # index += 1
