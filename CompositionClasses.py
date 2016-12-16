@@ -1,5 +1,6 @@
 import re
 from math import factorial
+from typing import List
 from Exceptions import SirilError
 
 STAGE_DICT_STR_TO_INT = {"0": 10, "E": 11, "T": 12, "A": 13, "B": 14, "C": 15, "D": 16}
@@ -9,83 +10,6 @@ STAGE_DICT_INT_TO_STR = {v: k for k, v in STAGE_DICT_STR_TO_INT.items()}
 for key, value in tuple(STAGE_DICT_STR_TO_INT.items()):
     # Add lower case versions
     STAGE_DICT_STR_TO_INT[key.lower()] = value
-
-
-class Composition:
-    def __init__(self, start, stage, extents):
-        self.rows = []
-        self.row_set = set()
-        self.start = start
-        self.stage = stage
-        self.extents = extents
-        self._true = True
-
-    @property
-    def current_row(self):
-        if self.rows:
-            return self.rows[-1]
-        else:
-            return self.start
-
-    def append(self, row):
-        if self._true and row in self.row_set:
-            self._true = None
-        self.rows.append(row)
-        self.row_set.add(row)
-
-    def extend(self, rows):
-        for row in rows:
-            self.append(row)
-
-    def apply_perm(self, perm):
-        self.append(self.current_row(perm))
-
-    def is_true(self, final=False):
-        if final or self._true is None:
-            # Simple common case
-            if self.extents == 1:
-                self._true = len(self.rows) == len(set(self.rows))
-            else:
-                test_sets = [set() for _ in range(self.extents)]
-                for row in self.rows:
-                    for t_set in test_sets:
-                        if row not in t_set:
-                            t_set.add(row)
-                            break
-                    else:
-                        # row is already used too many times
-                        self._true = False
-                        break
-                else:
-                    # Set row_set to last set, as most interested if row is in this one. The row cascades down when it
-                    # becomes dirty.
-                    self._true = True
-                    self.row_set = test_sets[-1]
-                if final:
-                    # Checks if row used n or n-1 times
-                    for i in range(self.extents - 1):
-                        if len(test_sets[i]) < factorial(self.stage):
-                            self._true = None
-                            break
-        return self._true
-
-    def number_repeated_rows(self):
-        """Returns number of rows featuring n + 1 times (i.e. are false in a n extent composition"""
-        # This is <= len(row_set) as rows are first added to row_set instead of lower down.
-        test_sets = [set() for _ in range(self.extents + 1)]
-        for row in self.rows:
-            for t_set in test_sets:
-                if row not in t_set:
-                    t_set.add(row)
-                    break
-        return len(test_sets[-1])
-
-    def __len__(self):
-        return len(self.rows)
-
-    def __iter__(self):
-        for row in self.rows:
-            yield row
 
 
 class Matcher:
@@ -193,16 +117,16 @@ class Row(tuple):
 
 
 class Permutation(tuple):
-    def __new__(cls, place_notation, stage):
+    def __new__(cls, place_ints: List[int], stage: int):
         # Integrity check
-        for place in place_notation:
+        for place in place_ints:
             if place > stage:
                 raise SirilError("Place notation greater than current number bells: {}".format(
                     STAGE_DICT_INT_TO_STR[place]))
         sequence = list(range(stage))
-        i = 1 if place_notation[0] % 2 else 2
+        i = 1 if place_ints[0] % 2 else 2
         while i < stage:
-            if i in place_notation:
+            if i in place_ints:
                 i += 1
                 continue
             else:
@@ -211,13 +135,13 @@ class Permutation(tuple):
                 i += 2
         return super().__new__(cls, sequence)
 
-    def __init__(self, place_notation, stage):
+    def __init__(self, place_ints, stage):
         self.stage = stage
         super().__init__()
 
 
 class PlaceNotationPerm(tuple):
-    def __init__(self, place_notation, stage):
+    def __init__(self, place_notation: str, stage: int):
         super().__init__()
 
     def __new__(cls, place_notation, stage):
@@ -237,6 +161,83 @@ class PlaceNotationPerm(tuple):
         if symmetric:
             place_notation_list += place_notation_list[-2::-1]
         return super().__new__(cls, (Permutation(place, stage) for place in place_notation_list))
+
+
+class Composition:
+    def __init__(self, start: Row, stage: int, extents: int):
+        self.rows = []
+        self.row_set = set()
+        self.start = start
+        self.stage = stage
+        self.extents = extents
+        self._true = True
+
+    @property
+    def current_row(self):
+        if self.rows:
+            return self.rows[-1]
+        else:
+            return self.start
+
+    def append(self, row):
+        if self._true and row in self.row_set:
+            self._true = None
+        self.rows.append(row)
+        self.row_set.add(row)
+
+    def extend(self, rows):
+        for row in rows:
+            self.append(row)
+
+    def apply_perm(self, perm):
+        self.append(self.current_row(perm))
+
+    def is_true(self, final=False):
+        if final or self._true is None:
+            # Simple common case
+            if self.extents == 1:
+                self._true = len(self.rows) == len(set(self.rows))
+            else:
+                test_sets = [set() for _ in range(self.extents)]
+                for row in self.rows:
+                    for t_set in test_sets:
+                        if row not in t_set:
+                            t_set.add(row)
+                            break
+                    else:
+                        # row is already used too many times
+                        self._true = False
+                        break
+                else:
+                    # Set row_set to last set, as most interested if row is in this one. The row cascades down when it
+                    # becomes dirty.
+                    self._true = True
+                    self.row_set = test_sets[-1]
+                    if final:
+                        # Checks if row used n or n-1 times
+                        for i in range(self.extents - 1):
+                            if len(test_sets[i]) < factorial(self.stage):
+                                self._true = None
+                                break
+        return self._true
+
+    def number_repeated_rows(self):
+        """Returns number of rows featuring n + 1 times (i.e. are false in a n extent composition"""
+        # This is <= len(row_set) as rows are first added to row_set instead of lower down.
+        test_sets = [set() for _ in range(self.extents + 1)]
+        for row in self.rows:
+            for t_set in test_sets:
+                if row not in t_set:
+                    t_set.add(row)
+                    break
+        return len(test_sets[-1])
+
+    def __len__(self):
+        return len(self.rows)
+
+    def __iter__(self):
+        for row in self.rows:
+            yield row
 
 
 if __name__ == '__main__':

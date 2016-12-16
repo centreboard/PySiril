@@ -7,21 +7,32 @@ run as python PySiril.py [-h] [-c] [-I] [-B [BELLS]] [-n EXTENTS] [-r ROUNDS]
                   
 Where -h brings up help. Infile and outfile specify files to read siril from and output the results to. They default to stdin and stdout respectively and can be explicitly set to be so by using -
 
-MicroSiril is a language for proving compositions for Change Ringing, which was expanded upon by Gsiril. This project is an implementation written in Python that extends Gsiril constructs of pattern matching, dynamic assignment and repeat blocks to include dynamic patttern matching (based on storing specified parts of current row,) formatting the current row output (e.g. omit printing the treble) and extended assignment, where a variable assigns to itself (e.g. currrent_line = current_line, "- \" for a storing a set of string to be printed later. These concepts can be seen in the "SAB 5129 Grandsire Cater.siril" file.
+Requires python 3.5 due to `import typing` in CompositionClasses.py To run with other python
+versions comment out this line and `:List` instances after arguments in function declarations
 
-Broadly speaking siril is a series of assignments that eventually resolve as either place notation that advances the composition or a string that is printed. For documentation on Gsiril see http://www.ex-parrot.com/~richard/gsiril/
+# MicroSiril and G Siril
+MicroSiril is a language for proving compositions for Change Ringing, which was expanded upon by Gsiril. 
+This project is an implementation written in Python that extends Gsiril constructs of pattern matching, dynamic assignment
+ and repeat blocks to include dynamic pattern matching (based on storing specified parts of current row,) formatting 
+ the current row output (e.g. omit printing the treble) and extended assignment, where a variable assigns to itself 
+ (e.g. current_line = current_line, "- \" for a storing a set of string to be printed later. These concepts can be seen in the "SAB 5129 Grandsire Cater.siril" file.
 
+Broadly speaking siril is a series of assignments (e.g. `PB = &-1-1-1, +2`) that eventually resolve as either place notation that advances the 
+composition or a string that is printed. For documentation on Gsiril see http://www.ex-parrot.com/~richard/gsiril/
+
+# PySiril extras
 PySiril also includes new builtin "notextent" which is executed when (for n extents) a composition:
-a) has no row repeated more then n times (else "conflict" and maybe "false" are executed)
-b) ends in rounds ("notround")
-c) some rows appear fewer than n-1 times (else "true") 
+1. has no row repeated more then n times (else "conflict" and maybe "false" are executed)
+2. ends in rounds ("notround")
+3. some rows appear fewer than n-1 times (else "true") 
 
 There are also additional statements/optional arguments:
 
 ### Calling Positions (or the flag -c)
 
-This executes siril for the standard calling positions Home (H), Wrong (W), Middle (M) and Before based on the position of the tenor. It is likely to only work for standard use case of lead end placenotation being length 1 and middle not being making an n-2 bob.
+This executes siril for the standard calling positions Home (H), Wrong (W), Middle (M) and Before (B) based on the position of the tenor. It is likely to only work for standard use case of lead end place notation being length 1 and middle not being making an n-2 bob.
 The current implementation is where method can be assigned by the method statement or just set it to the place notation for the lead with p, b and s being the lead end place notation.
+`<tenor>` is substituted for the number of the heaviest bell.
 
     H = repeat(method, {/*<tenor>?/: b, break; p})
     sH = repeat(method, {/*<tenor>?/: s, break; p})

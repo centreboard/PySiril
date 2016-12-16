@@ -36,6 +36,15 @@ class TestParse(TestCase):
         for line in error_lines:
             self.assertRaises(SirilError, string_parsing, line, assignments_dict)
 
+        assignments_dict = self.new_assignments_dict
+        line = "assignment, \"string\", repeat({/123/:\"@\", break})"
+        out_line, assignments_dict = string_parsing(line, assignments_dict)
+        self.assertIn(("\"string\"",), assignments_dict.values())
+        self.assertIn(("\"@\"",), assignments_dict.values())
+        self.assertNotIn(("assignment",) ,assignments_dict.values())
+        self.assertNotIn(("break",), assignments_dict.values())
+        self.assertRegex(out_line, r"assignment, `@[0-9]+@`, repeat\(\{/123/:`@[0-9]+@`, break\}\)")
+
 
 class TestFunction(TestCase):
     def setUp(self):

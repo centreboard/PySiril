@@ -171,11 +171,11 @@ class TestProver(TestCase):
                         {n} extents
                         x = +-1
                         conflict= "No dollars"
-                        prove {x}x""".format(B=stage, n=extents, x=2 * extents * stage)
+                        prove {x}x""".format(B=stage, n=extents, x=4 * stage)
                 # noinspection PyTypeChecker
                 self.check_final(siril, "conflict", None, False)
                 self.check_final(siril, "true", assertion=False)
-                if extents == 1:
+                if extents < 4:
                     self.check_final(siril, "false", 0)
                 else:
                     self.check_final(siril, "notextent", 2)
@@ -184,8 +184,8 @@ class TestProver(TestCase):
                         {n} extents
                         x = +-1
                         conflict= "No dollars"
-                        prove {x}x""".format(B=stage, n=extents, x=2 * extents * stage + 1)
-                if extents > 1:
+                        prove {x}x""".format(B=stage, n=extents, x=4 * stage + 1)
+                if extents > 4:
                     self.check_final(siril, "notround", 1)
                 else:
                     self.check_final(siril, "false", 0)
